@@ -11,7 +11,7 @@ try:
 except ImportError:
 	from urllib import urlretrieve
 
-def setup_letsencrypt(site, custom_domain, bench_path, interactive):
+def setup_letsencrypt(site, custom_domain, bench_path, interactive, confirm=True):
 
 	site_path = os.path.join(bench_path, "sites", site, "site_config.json")
 	if not os.path.exists(os.path.dirname(site_path)):
@@ -29,9 +29,10 @@ def setup_letsencrypt(site, custom_domain, bench_path, interactive):
 			print("No custom domain named {0} set for site".format(custom_domain))
 			return
 
-	click.confirm('Running this will stop the nginx service temporarily causing your sites to go offline\n'
-		'Do you want to continue?',
-		abort=True)
+	if confirm:
+		click.confirm('Running this will stop the nginx service temporarily causing your sites to go offline\n'
+			'Do you want to continue?',
+			abort=True)
 
 	if not get_config(bench_path).get("dns_multitenant"):
 		print("You cannot setup SSL without DNS Multitenancy")
@@ -56,7 +57,7 @@ def run_certbot_and_setup_ssl(site, custom_domain, bench_path, interactive=True)
 	get_certbot()
 
 	try:
-		interactive = '' if interactive else '-n'
+		interactive = '' if interactive else '-n -q --agree-tos'
 		exec_cmd("{path} {interactive} --config /etc/letsencrypt/configs/{site}.cfg certonly".format(path=get_certbot_path(), interactive=interactive, site=custom_domain or site))
 	except CommandFailedError:
 		service('nginx', 'start')
