@@ -26,8 +26,8 @@ def safe_decode(string, encoding = 'utf-8'):
 def get_frappe(bench_path='.'):
 	frappe = get_env_cmd('frappe', bench_path=bench_path)
 	if not os.path.exists(frappe):
-		print('frappe app is not installed. Run the following command to install frappe')
-		print('bench get-app https://github.com/frappe/frappe.git')
+		print('dodock app is not installed. Run the following command to install dodock')
+		print('bench get-app https://gitlab.com/dokos/dodock.git')
 	return frappe
 
 def get_env_cmd(cmd, bench_path='.'):
@@ -70,7 +70,7 @@ def init(path, apps_path=None, no_procfile=False, no_backups=False,
 		clone_apps_from(bench_path=path, clone_from=clone_from, update_app=not clone_without_update)
 	else:
 		if not frappe_path:
-			frappe_path = 'https://github.com/frappe/frappe.git'
+			frappe_path = 'https://gitlab.com/dokos/dodock.git'
 
 		get_app(frappe_path, branch=frappe_branch, bench_path=path, build_asset_files=False, verbose=verbose)
 

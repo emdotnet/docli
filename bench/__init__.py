@@ -1,6 +1,6 @@
 from jinja2 import Environment, PackageLoader
 
-__version__ = "4.1.0"
+__version__ = "0.0.1"
 
 env = Environment(loader=PackageLoader('bench.config'))
 

@@ -101,16 +101,14 @@ def get_app(git_url, branch=None, bench_path='.', build_asset_files=True, verbos
 		from urllib.parse import urljoin
 
 	if not check_url(git_url, raise_err = False):
-		orgs = ['frappe', 'erpnext']
-		for org in orgs:
-			url = 'https://api.github.com/repos/{org}/{app}'.format(org = org, app = git_url)
-			res = requests.get(url)
-			if res.ok:
-				data    = res.json()
-				if 'name' in data:
-					if git_url == data['name']:
-						git_url = 'https://github.com/{org}/{app}'.format(org = org, app = git_url)
-						break
+		url = 'https://gitlab.com/api/v4/groups/4823361/projects/'
+		res = requests.get(url)
+		if res.ok:
+			data = res.json()
+			for project in projects:
+				if git_url in [project['name'], project['path']]:
+					git_url = 'https://gitlab.com/dokos/{app}'.format(app = git_url)
+					break
 
 	#Gets repo name from URL
 	repo_name = git_url.rsplit('/', 1)[1].rsplit('.', 1)[0]
@@ -223,7 +221,7 @@ Here are your choices:
 1. Merge the {0} app manually with "git pull" / "git pull --rebase" and fix conflicts.
 1. Temporarily remove your changes with "git stash" or discard them completely
 	with "bench update --reset" or for individual repositries "git reset --hard"
-2. If your changes are helpful for others, send in a pull request via GitHub and
+2. If your changes are helpful for others, send in a pull request via GitLab and
 	wait for them to be merged in the core.'''.format(app))
 					sys.exit(1)
 

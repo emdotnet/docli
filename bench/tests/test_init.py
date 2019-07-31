@@ -10,6 +10,7 @@ from bench.release import get_bumped_version
 
 bench.cli.from_command_line = True
 
+# TODO: Correct test suite
 class TestBenchInit(unittest.TestCase):
 	def setUp(self):
 		self.benches_path = "."
