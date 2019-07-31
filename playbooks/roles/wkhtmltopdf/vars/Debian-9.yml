@@ -1,5 +1,4 @@
----
 # See https://wkhtmltopdf.org/downloads.html for checksums.
 package_source: 'https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.stretch_{{ "amd64" if ansible_architecture == "x86_64" else "i386"}}.deb'
-download_dest: "/tmp/wkhtmltox_0.12.5-1.stretch_{{ "amd64" if ansible_architecture == "x86_64" else "i386"}}.deb"
-package_checksum: sha256:{{ "1140b0ab02aa6e17346af2f14ed0de807376de475ba90e1db3975f112fbd20bb" if ansible_architecture == "x86_64" else "5b2d15e738ac479e7a8ca6fd765f406c3684a48091813520f87878278d6dd22a"}}
+download_dest: '/tmp/wkhtmltox_0.12.5-1.stretch_{{ "amd64" if ansible_architecture == "x86_64" else "i386"}}.deb'
+package_checksum: 'sha256:{{ "1140b0ab02aa6e17346af2f14ed0de807376de475ba90e1db3975f112fbd20bb" if ansible_architecture == "x86_64" else "5b2d15e738ac479e7a8ca6fd765f406c3684a48091813520f87878278d6dd22a"}}'
