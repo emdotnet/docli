@@ -9,12 +9,4 @@
   command: npm install -g yarn
   become: yes
   become_user: root
-
-- name: Set correct permissions on .config folder
-  file:
-    path: '/home/{{ frappe_user }}/.config'
-    owner: '{{ frappe_user }}'
-    group: '{{ frappe_user }}'
-  become: yes
-  become_user: root
 ...

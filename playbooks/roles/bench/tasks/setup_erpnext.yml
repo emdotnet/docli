@@ -18,7 +18,7 @@
     command: "bench new-site {{ site }} --admin-password '{{ admin_password }}' --mariadb-root-password '{{ mysql_root_password }}'"
     args:
       chdir: "{{ bench_path }}"
-    when: not site_folder.stat.exists and not without_site
+    when: not site_folder.stat.exists or not without_site
 
   - name: Install ERPNext to default site
     command: "bench --site {{ site }} install-app erpnext"
