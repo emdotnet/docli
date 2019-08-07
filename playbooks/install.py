@@ -73,7 +73,7 @@ def install_bench(args):
 
 	if not args.user:
 		if args.production:
-			args.user = 'frappe'
+			args.user = 'dokos'
 
 		elif 'SUDO_USER' in os.environ:
 			args.user = os.environ['SUDO_USER']
@@ -204,7 +204,7 @@ def clone_bench_repo(args):
 		clone_path = tmp_bench_repo
 
 	branch = args.bench_branch or 'master'
-	repo_url = args.repo_url or 'https://gitlab.com/dokos/docli'
+	repo_url = args.repo_url or 'https://gitlab.com/dokos/docli.git'
 
 
 	success = run_os_command(
@@ -243,7 +243,7 @@ def get_passwords(args):
 	and creates passwords.txt in the bench user's home directory
 	"""
 
-	ignore_prompt = args.run_travis or args.without_bench_setup
+	ignore_prompt = args.run_travis
 	mysql_root_password, admin_password = '', ''
 	passwords_file_path = os.path.join(os.path.expanduser('~' + args.user), 'passwords.txt')
 
@@ -412,4 +412,4 @@ if __name__ == '__main__':
 
 	install_bench(args)
 
-	print('''Frappe/ERPNext has been successfully installed!''')
+	print('''Dokos has been successfully installed!''')

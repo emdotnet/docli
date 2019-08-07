@@ -8,7 +8,7 @@
     args:
       creates: "{{ bench_path }}/apps/erpnext"
       chdir: "{{ bench_path }}"
-    when: not app.stat.exists and not without_erpnext
+    when: not app.stat.exists or not without_erpnext
 
   - name: Check whether the site already exists
     stat: path="{{ bench_path }}/sites/{{ site }}"
