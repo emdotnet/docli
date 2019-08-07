@@ -80,15 +80,15 @@ def set_common_config(configs):
 		if value in ("False", "True"):
 			value = ast.literal_eval(value)
 
-		elif "." in value:
-			try:
-				value = float(value)
-			except ValueError:
-				pass
-
 		elif "{" in value or "[" in value:
 			try:
 				value = json.loads(value)
+			except ValueError as e:
+				pass
+
+		elif "." in value:
+			try:
+				value = float(value)
 			except ValueError:
 				pass
 
