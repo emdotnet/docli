@@ -101,11 +101,11 @@ def get_app(git_url, branch=None, bench_path='.', build_asset_files=True, verbos
 		from urllib.parse import urljoin
 
 	if not check_url(git_url, raise_err = False):
-		projects = 'https://gitlab.com/api/v4/groups/4823361/projects/'
+		url = 'https://gitlab.com/api/v4/groups/4823361/projects/'
 		res = requests.get(url)
 		if res.ok:
 			data = res.json()
-			for project in projects:
+			for project in data:
 				if git_url in [project['name'], project['path']]:
 					git_url = 'https://gitlab.com/dokos/{app}'.format(app = git_url)
 					break
