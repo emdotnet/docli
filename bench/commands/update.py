@@ -54,7 +54,7 @@ def update(pull=False, patch=False, build=False, bench=False, auto=False, restar
 	if version_upgrade[0]:
 		print()
 		print()
-		print("This update will cause a major version change in Frappe/ERPNext from {0} to {1}.".format(*version_upgrade[1:]))
+		print("This update will cause a major version change in dokos from {0} to {1}.".format(*version_upgrade[1:]))
 		print("This would take significant time to migrate and might break custom apps.")
 		click.confirm('Do you want to continue?', abort=True)
 

@@ -343,8 +343,6 @@ def switch_branch(branch, apps=None, bench_path='.', upgrade=False, check_upgrad
 	if not apps:
 		apps = [name for name in os.listdir(apps_dir)
 			if os.path.isdir(os.path.join(apps_dir, name))]
-		if branch=="v4.x.x":
-			apps.append('shopping_cart')
 
 	for app in apps:
 		app_dir = os.path.join(apps_dir, app)
@@ -420,8 +418,6 @@ def validate_branch():
 	for app in ['frappe', 'erpnext']:
 		branch = get_current_branch(app)
 
-		if branch == "master":
-			print(''' master branch is renamed to version-11 and develop to version-12. Please switch to new branches to get future updates.
-
-To switch to version 11, run the following commands: bench switch-to-branch version-11''')
+		if branch in ["version-11", "version-12"]:
+			print(''' Please switch to branch master''')
 			sys.exit(1)
