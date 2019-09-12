@@ -183,7 +183,8 @@ def setup_socketio(bench_path='.'):
 		babel-cli babel-preset-es2015 babel-preset-es2016 babel-preset-es2017 babel-preset-babili", cwd=bench_path)
 
 def patch_sites(bench_path='.'):
-	run_frappe_cmd('--site', 'all', 'migrate', bench_path=bench_path)
+	try:
+		run_frappe_cmd('--site', 'all', 'migrate', bench_path=bench_path)
 	except subprocess.CalledProcessError:
 		raise PatchError
 
