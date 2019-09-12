@@ -70,7 +70,6 @@ def _update(pull=False, patch=False, build=False, update_bench=False, auto=False
 
 	before_update(bench_path=bench_path, requirements=requirements)
 
-	conf.update({ "maintenance_mode": 1, "pause_scheduler": 1 })
 	update_config(conf, bench_path=bench_path)
 
 	if not no_backup:
@@ -80,6 +79,7 @@ def _update(pull=False, patch=False, build=False, update_bench=False, auto=False
 	if pull:
 		pull_all_apps(bench_path=bench_path, reset=reset)
 
+	conf.update({ "maintenance_mode": 1, "pause_scheduler": 1 })
 	if requirements:
 		update_requirements(bench_path=bench_path)
 		update_node_packages(bench_path=bench_path)
@@ -112,7 +112,7 @@ def _update(pull=False, patch=False, build=False, update_bench=False, auto=False
 	update_config(conf, bench_path=bench_path)
 
 	print("_"*80)
-	print("Bench: Deployment tool for Frappe and ERPNext (https://erpnext.org).")
+	print("docli: Deployment tool for dokos (https://dokos.io).")
 	print("Open source depends on your contributions, so please contribute bug reports, patches, fixes or cash and be a part of the community")
 	print()
 
