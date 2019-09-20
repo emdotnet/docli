@@ -414,7 +414,7 @@ def get_apps_json(path):
 		with open(path) as f:
 			return json.load(f)
 
-def validate_branch():
+def validate_branch(bench_path='.'):
 	for app in get_apps(bench_path=bench_path):
 		if app in ['frappe', 'erpnext']:
 			branch = get_current_branch(app)
