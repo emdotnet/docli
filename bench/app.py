@@ -415,9 +415,10 @@ def get_apps_json(path):
 			return json.load(f)
 
 def validate_branch():
-	for app in ['frappe', 'erpnext']:
-		branch = get_current_branch(app)
+	for app in get_apps(bench_path=bench_path):
+		if app in ['frappe', 'erpnext']:
+			branch = get_current_branch(app)
 
-		if branch in ["version-11", "version-12"]:
-			print(''' Please switch to branch master''')
-			sys.exit(1)
+			if branch in ["version-11", "version-12"]:
+				print(''' Please switch to branch master''')
+				sys.exit(1)
