@@ -771,7 +771,9 @@ def setup_fonts():
 
 def set_git_remote_url(git_url, bench_path='.'):
 	"Set app remote git url"
-	app = git_url.rsplit('/', 1)[1].rsplit('.', 1)[0]
+	app_map = {"dodock": "frappe", "dokos": "erpnext"}
+	app_name = git_url.rsplit('/', 1)[1].rsplit('.', 1)[0]
+	app = app_map.get(app_name, app_name)
 
 	if app not in bench.app.get_apps(bench_path):
 		print("No app named {0}".format(app))

@@ -15,7 +15,7 @@ def remote_set_url(git_url):
 @click.command('remote-reset-url')
 @click.argument('app')
 def remote_reset_url(app):
-	"Reset app remote url to frappe official"
+	"Reset app remote url to dokos official repository"
 	git_url = "https://gitlab.com/dokos/{}.git".format(app)
 	set_git_remote_url(git_url)
 
