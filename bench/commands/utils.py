@@ -128,20 +128,22 @@ def backup_all_sites():
 @click.option('--from-branch', default='develop')
 @click.option('--to-branch', default='master')
 @click.option('--remote', default='upstream')
-@click.option('--owner', default='frappe')
+@click.option('--owner', default='dokos')
+@click.option('--prerelease', is_flag=True, default=False)
+@click.option('--prerelease-date', help='Date in YYYY-MM-DD format')
 @click.option('--repo-name')
 @click.option('--dont-frontport', is_flag=True, default=False, help='Front port fixes to new branches, example merging hotfix(v10) into staging-fixes(v11)')
-def release(app, bump_type, from_branch, to_branch, owner, repo_name, remote, dont_frontport):
+def release(app, bump_type, from_branch, to_branch, owner, prerelease, prerelease_date, repo_name, remote, dont_frontport):
 	"Release app (internal to the Frappe team)"
 	from bench.release import release
 	frontport = not dont_frontport
 	release(bench_path='.', app=app, bump_type=bump_type, from_branch=from_branch, to_branch=to_branch,
-		remote=remote, owner=owner, repo_name=repo_name, frontport=frontport)
+		remote=remote, owner=owner, prerelease=prerelease, prerelease_date=prerelease_date, repo_name=repo_name, frontport=frontport)
 
 
 @click.command('prepare-beta-release')
 @click.argument('app')
-@click.option('--owner', default='frappe')
+@click.option('--owner', default='dokos')
 def prepare_beta_release(app, owner):
 	"""Prepare major beta release from develop branch"""
 	from bench.prepare_beta_release import prepare_beta_release

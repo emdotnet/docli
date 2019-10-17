@@ -15,7 +15,7 @@ import bench
 import sys
 import shutil
 
-logging.basicConfig(level="DEBUG")
+logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
 
 class InvalidBranchException(Exception): pass

@@ -12,20 +12,23 @@ import requests.exceptions
 from time import sleep
 from .config.common_site_config import get_config
 import click
+import gitlab
+import datetime
+
+app_map = {
+	'frappe': 'dodock',
+	'erpnext': 'dokos'
+}
 
 branches_to_update = {
 	'develop': [],
-	'version-11-hotfix': [],
-	'version-12-hotfix': [],
+	'hotfix': []
 }
 
 releasable_branches = ['master']
 
-github_username = None
-github_password = None
-
 def release(bench_path, app, bump_type, from_branch, to_branch,
-		remote='upstream', owner='frappe', repo_name=None, frontport=True):
+		remote='upstream', owner='dokos', prerelease=False, prerelease_date=None, repo_name=None, frontport=True):
 
 	confirm_testing()
 	config = get_config(bench_path)
@@ -41,41 +44,34 @@ def release(bench_path, app, bump_type, from_branch, to_branch,
 	if config.get('releasable_branches'):
 		releasable_branches.extend(config.get('releasable_branches',[]))
 
-	validate(bench_path, config)
+	gitlab = authenticate(bench_path, config)
 
-	bump(bench_path, app, bump_type, from_branch=from_branch, to_branch=to_branch, owner=owner,
-		repo_name=repo_name, remote=remote, frontport=frontport)
+	bump(gitlab, bench_path, app, bump_type, from_branch=from_branch, to_branch=to_branch, owner=owner,
+		prerelease=prerelease, prerelease_date=prerelease_date, repo_name=repo_name, remote=remote, frontport=frontport)
 
-def validate(bench_path, config):
-	global github_username, github_password
+def authenticate(bench_path, config):
+	gitlab_token = config.get('gitlab_token')
 
-	github_username = config.get('github_username')
-	github_password = config.get('github_password')
+	if not gitlab_token:
+		gitlab_token = click.prompt('Gitlab Token', type=str)
 
-	if not github_username:
-		github_username = click.prompt('Username', type=str)
-
-	if not github_password:
-		github_password = getpass.getpass()
-
-	r = requests.get('https://api.github.com/user', auth=HTTPBasicAuth(github_username, github_password))
-	r.raise_for_status()
+	return gitlab.Gitlab('https://gitlab.com', private_token=gitlab_token)
 
 def confirm_testing():
 	print('')
 	print('================ CAUTION ==================')
 	print('Never miss this, even if it is a really small release!!')
-	print('Manual Testing Checklisk: https://github.com/frappe/bench/wiki/Testing-Checklist')
 	print('')
 	print('')
-	click.confirm('Is manual testing done?', abort = True)
-	click.confirm('Have you added the change log?', abort = True)
+	click.confirm('Is manual testing done ?', abort = True)
+	click.confirm('Have you added a change log ?', abort = True)
 
-def bump(bench_path, app, bump_type, from_branch, to_branch, remote, owner, repo_name=None, frontport=True):
+def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, owner, \
+	prerelease=False, prerelease_date=None, repo_name=None, frontport=True):
 	assert bump_type in ['minor', 'major', 'patch', 'stable', 'prerelease']
 
 	repo_path = os.path.join(bench_path, 'apps', app)
-	push_branch_for_old_major_version(bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner)
+	#push_branch_for_old_major_version(bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner)
 	update_branches_and_check_for_changelog(repo_path, from_branch, to_branch, remote=remote)
 	message = get_release_message(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
 
@@ -83,18 +79,18 @@ def bump(bench_path, app, bump_type, from_branch, to_branch, remote, owner, repo
 		print('No commits to release')
 		return
 
-	print()
+	print('')
 	print(message)
-	print()
+	print('')
 
 	click.confirm('Do you want to continue?', abort=True)
 
-	new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch)
+	new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch, prerelease=prerelease)
 	commit_changes(repo_path, new_version, to_branch)
 	tag_name = create_release(repo_path, new_version, from_branch=from_branch, to_branch=to_branch, frontport=frontport)
-	push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
+	#push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
 	prerelease = True if 'beta' in new_version else False
-	create_github_release(repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease)
+	create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease, prerelease_date=prerelease_date)
 	print('Released {tag} for {repo_path}'.format(tag=tag_name, repo_path=repo_path))
 
 def update_branches_and_check_for_changelog(repo_path, from_branch, to_branch, remote='upstream'):
@@ -133,9 +129,9 @@ def get_release_message(repo_path, from_branch, to_branch, remote='upstream'):
 	if log:
 		return "* " + log.replace('\n', '\n* ')
 
-def bump_repo(repo_path, bump_type, from_branch, to_branch):
+def bump_repo(repo_path, bump_type, from_branch, to_branch, prerelease):
 	current_version = get_current_version(repo_path, to_branch)
-	new_version = get_bumped_version(current_version, bump_type)
+	new_version = get_bumped_version(current_version, bump_type, prerelease)
 
 	print('bumping version from', current_version, 'to', new_version)
 
@@ -158,34 +154,10 @@ def get_current_version(repo_path, to_branch):
 				contents)
 		return match.group(2)
 
-def get_bumped_version(version, bump_type):
+def get_bumped_version(version, bump_type, prerelease=False):
 	v = semantic_version.Version(version)
-	if bump_type == 'major':
-		v.major += 1
-		v.minor = 0
-		v.patch = 0
-		v.prerelease = None
-
-	elif bump_type == 'minor':
-		v.minor += 1
-		v.patch = 0
-		v.prerelease = None
-
-	elif bump_type == 'patch':
+	if prerelease:
 		if v.prerelease == ():
-			v.patch += 1
-			v.prerelease = None
-
-		elif len(v.prerelease) == 2:
-			v.prerelease = ()
-
-	elif bump_type == 'stable':
-		# remove pre-release tag
-		v.prerelease = None
-
-	elif bump_type == 'prerelease':
-		if v.prerelease == ():
-			v.patch += 1
 			v.prerelease = ('beta', '1')
 
 		elif len(v.prerelease) == 2:
@@ -194,8 +166,29 @@ def get_bumped_version(version, bump_type):
 		else:
 			raise ("Something wen't wrong while doing a prerelease")
 
+	if bump_type == 'major':
+		v.major += 1
+		v.minor = 0
+		v.patch = 0
+
+	elif bump_type == 'minor':
+		v.minor += 1
+		v.patch = 0
+
+	elif bump_type == 'patch':
+		v.patch += 1
+
+	elif bump_type == 'stable':
+		# remove pre-release tag
+		v.prerelease = None
+
+	elif bump_type == 'prerelease':
+		pass
+
 	else:
 		raise ("bump_type not amongst [major, minor, patch, prerelease]")
+
+	click.confirm('Do you want to create version {version}?'.format(version=str(v)), abort=True)
 
 	return str(v)
 
@@ -223,7 +216,7 @@ def set_filename_version(filename, version_number, pattern):
 	changed = []
 
 	def inject_version(match):
-		before, old, after = match.groups()
+		before, dummy, after = match.groups()
 		changed.append(True)
 		return before + version_number + after
 
@@ -306,33 +299,30 @@ def push_release(repo_path, from_branch, to_branch, remote='upstream'):
 
 	print(g.push(remote, *args))
 
-def create_github_release(repo_path, tag_name, message, remote='upstream', owner='frappe', repo_name=None,
-		gh_username=None, gh_password=None, prerelease=False):
+def create_gitlab_release(gitlab, repo_path, tag_name, message, remote='upstream', owner='frappe',
+		repo_name=None, prerelease=False, prerelease_date=None):
 
-	print('creating release on github')
-
-	global github_username, github_password
-	if not (gh_username and gh_password):
-		if not (github_username and github_password):
-			raise Exception("No credentials")
-		gh_username = github_username
-		gh_password = github_password
-
-	repo_name = repo_name or os.path.basename(repo_path)
 	data = {
 		'tag_name': tag_name,
-		'target_commitish': 'master',
 		'name': 'Release ' + tag_name,
-		'body': message,
-		'draft': False,
-		'prerelease': prerelease
+		'description': message,
+		'released_at': datetime.datetime.strptime(prerelease_date, "%Y-%m-%d").isoformat() if prerelease and prerelease_date else None
 	}
+
+	print('')
+	click.echo(data)
+	print('')
+
+	click.confirm('Do you want to create a release with the above data ?', abort=True)
+	print('creating release on gitlab')
+
+	repo_name = repo_name or os.path.basename(repo_path)
 	for i in range(3):
 		try:
-			r = requests.post('https://api.github.com/repos/{owner}/{repo_name}/releases'.format(
-				owner=owner, repo_name=repo_name),
-				auth=HTTPBasicAuth(gh_username, gh_password), data=json.dumps(data))
-			r.raise_for_status()
+			project = gitlab.projects.get('dokos/{repo_name}'.format(repo_name=app_map.get(repo_name)))
+			print(project)
+			#release = project.releases.create(data)
+			#release.raise_for_status()
 			break
 		except requests.exceptions.HTTPError:
 			print('request failed, retrying....')
@@ -340,15 +330,15 @@ def create_github_release(repo_path, tag_name, message, remote='upstream', owner
 			if i !=2:
 				continue
 			else:
-				print(r.json())
+				print(release)
 				raise
-	return r
+	return release
 
 def push_branch_for_old_major_version(bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner):
 	if bump_type != 'major':
 		return
 
-	current_version = get_current_version(repo_path)
+	current_version = get_current_version(repo_path, to_branch)
 	old_major_version_branch = "v{major}.x.x".format(major=current_version.split('.')[0])
 
 	click.confirm('Do you want to push {branch}?'.format(branch=old_major_version_branch), abort=True)

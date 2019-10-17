@@ -215,7 +215,7 @@ def clone_bench_repo(args):
 	return success
 
 def run_os_command(command_map):
-	'''command_map is a dictionary of {'executable': command}. For ex. {'apt-get': 'sudo apt-get install -y python2.7'} '''
+	'''command_map is a dictionary of {'executable': command}. For ex. {'apt-get': 'sudo apt-get install -y python3.6'} '''
 	success = True
 	for executable, commands in list(command_map.items()):
 		if find_executable(executable):

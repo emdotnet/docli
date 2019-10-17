@@ -14,8 +14,8 @@ with open('bench/__init__.py', 'rb') as f:
 setup(
 	name='bench',
 	description='Metadata driven, full-stack web framework',
-	author='Frappe Technologies',
-	author_email='info@frappe.io',
+	author='Dokos SAS',
+	author_email='hello@dokos.io',
 	version=version,
 	packages=find_packages(),
 	zip_safe=False,

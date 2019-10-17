@@ -6,3 +6,4 @@ honcho
 python-crontab
 semantic_version
 GitPython==2.1.11
+python-gitlab
