@@ -34,6 +34,12 @@ def get_apps(bench_path='.'):
 	except IOError:
 		return []
 
+app_map = {
+	"dodock": "frappe",
+	"dokos": "erpnext"
+}
+
+
 def add_to_appstxt(app, bench_path='.'):
 	apps = get_apps(bench_path=bench_path)
 	if app not in apps:
@@ -92,7 +98,7 @@ def remove_from_excluded_apps_txt(app, bench_path='.'):
 		apps.remove(app)
 		return write_excluded_apps_txt(apps, bench_path=bench_path)
 
-def get_app(git_url, branch=None, bench_path='.', build_asset_files=True, verbose=False,
+def get_app(name, git_url=None, branch=None, bench_path='.', build_asset_files=True, verbose=False,
 	postprocess = True):
 	# from bench.utils import check_url
 	try:
@@ -100,26 +106,28 @@ def get_app(git_url, branch=None, bench_path='.', build_asset_files=True, verbos
 	except ImportError:
 		from urllib.parse import urljoin
 
-	if not check_url(git_url, raise_err = False):
+	if not git_url or not check_url(git_url, raise_err = False):
 		url = 'https://gitlab.com/api/v4/groups/4823361/projects/'
 		res = requests.get(url)
 		if res.ok:
 			data = res.json()
 			for project in data:
-				if git_url in [project['name'], project['path']]:
-					git_url = 'https://gitlab.com/dokos/{app}'.format(app = git_url)
+				if name in [project['name'], project['path']]:
+					git_url = 'https://gitlab.com/dokos/{app}'.format(app = name)
+					name = app_map.get(name) or name
 					break
 
 	#Gets repo name from URL
-	repo_name = git_url.rsplit('/', 1)[1].rsplit('.', 1)[0]
-	logger.info('getting app {}'.format(repo_name))
+	repo_name = name or git_url.rsplit('/', 1)[1].rsplit('.', 1)[0]
+	logger.info('getting app {}'.format(name))
 	shallow_clone = '--depth 1' if check_git_for_shallow_clone() else ''
 	branch = '--branch {branch}'.format(branch=branch) if branch else ''
 
-	exec_cmd("git clone {git_url} {branch} {shallow_clone} --origin upstream".format(
+	exec_cmd("git clone {git_url} {branch} {shallow_clone} --origin upstream {name}".format(
 				git_url=git_url,
 				shallow_clone=shallow_clone,
-				branch=branch),
+				branch=branch,
+				name=name),
 			cwd=os.path.join(bench_path, 'apps'))
 
 	#Retrieves app name from setup.py

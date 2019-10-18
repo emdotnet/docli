@@ -71,7 +71,7 @@ def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, own
 	assert bump_type in ['minor', 'major', 'patch', 'stable', 'prerelease']
 
 	repo_path = os.path.join(bench_path, 'apps', app)
-	#push_branch_for_old_major_version(bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner)
+	push_branch_for_old_major_version(bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner)
 	update_branches_and_check_for_changelog(repo_path, from_branch, to_branch, remote=remote)
 	message = get_release_message(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
 
@@ -88,7 +88,7 @@ def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, own
 	new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch, prerelease=prerelease)
 	commit_changes(repo_path, new_version, to_branch)
 	tag_name = create_release(repo_path, new_version, from_branch=from_branch, to_branch=to_branch, frontport=frontport)
-	#push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
+	push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
 	prerelease = True if 'beta' in new_version else False
 	create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease, prerelease_date=prerelease_date)
 	print('Released {tag} for {repo_path}'.format(tag=tag_name, repo_path=repo_path))
@@ -320,9 +320,7 @@ def create_gitlab_release(gitlab, repo_path, tag_name, message, remote='upstream
 	for i in range(3):
 		try:
 			project = gitlab.projects.get('dokos/{repo_name}'.format(repo_name=app_map.get(repo_name)))
-			print(project)
-			#release = project.releases.create(data)
-			#release.raise_for_status()
+			project.releases.create(data)
 			break
 		except requests.exceptions.HTTPError:
 			print('request failed, retrying....')
