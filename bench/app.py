@@ -418,9 +418,9 @@ def get_apps_json(path):
 	if path.startswith('http'):
 		r = requests.get(path)
 		return r.json()
-	else:
-		with open(path) as f:
-			return json.load(f)
+
+	with open(path) as f:
+		return json.load(f)
 
 def validate_branch(bench_path='.'):
 	for app in get_apps(bench_path=bench_path):

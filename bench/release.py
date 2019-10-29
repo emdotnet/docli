@@ -22,6 +22,7 @@ app_map = {
 
 branches_to_update = {
 	'develop': [],
+	'staging': [],
 	'hotfix': []
 }
 
