@@ -415,8 +415,6 @@ def update_requirements(bench_path='.'):
 
 	exec_cmd("{pip} install --upgrade pip".format(pip=pip))
 
-	apps_dir = os.path.join(bench_path, 'apps')
-
 	# Update bench requirements
 	bench_req_file = os.path.join(os.path.dirname(bench.__path__[0]), 'requirements.txt')
 	install_requirements(pip, bench_req_file)
@@ -479,7 +477,7 @@ def update_npm_packages(bench_path='.'):
 
 def install_requirements(pip, req_file):
 	if os.path.exists(req_file):
-		exec_cmd("{pip} install -q -r {req_file}".format(pip=pip, req_file=req_file))
+		exec_cmd("{pip} install -q -U -r {req_file}".format(pip=pip, req_file=req_file))
 
 def backup_site(site, bench_path='.'):
 	run_frappe_cmd('--site', site, 'backup', bench_path=bench_path)
