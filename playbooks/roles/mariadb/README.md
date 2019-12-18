@@ -5,10 +5,9 @@ Installs MariaDB
 ## Supported platforms
 
 ```
-CentOS 6 & 7
-Ubuntu 14.04
-Ubuntu 16.04
-Debain 9
+CentOS 7
+Ubuntu >= 18.04
+Debian 8, 9, 10
 ```
 
 ## Post install
