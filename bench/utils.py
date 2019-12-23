@@ -72,7 +72,7 @@ def init(path, apps_path=None, no_procfile=False, no_backups=False,
 		if not frappe_path:
 			frappe_path = 'https://gitlab.com/dokos/dodock.git'
 
-		get_app("dodock" ,frappe_path, branch=frappe_branch, bench_path=path, build_asset_files=False, verbose=verbose)
+		get_app("dodock" ,frappe_path, branch=frappe_branch, bench_path=path, skip_assets=True, verbose=verbose)
 
 		if apps_path:
 			install_apps_from_path(apps_path, bench_path=path)
