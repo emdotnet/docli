@@ -10,21 +10,24 @@
     loop_var: version_specific_vars_file
 
 - name: install base fonts
-  yum: name={{ item }} state=present
-  with_items:
-    - libXrender
-    - libXext
-    - xorg-x11-fonts-75dpi
-    - xorg-x11-fonts-Type1
+  yum:
+    name:
+      - libXrender
+      - libXext
+      - xorg-x11-fonts-75dpi
+      - xorg-x11-fonts-Type1
+    state: present
   when: ansible_os_family == 'RedHat'
 
 - name: install base fonts
-  apt: name={{ item }} state=present force=yes
-  with_items:
-    - libxrender1
-    - libxext6
-    - xfonts-75dpi
-    - xfonts-base
+  apt:
+    pkg:
+      - libxrender1
+      - libxext6
+      - xfonts-75dpi
+      - xfonts-base
+    state: present
+    force: yes
   when: ansible_os_family == 'Debian'
 
 - name: Download wkhtmltopdf
