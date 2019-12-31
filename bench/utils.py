@@ -665,11 +665,13 @@ def post_upgrade(from_ver, to_ver, bench_path='.'):
 		generate_supervisor_config(bench_path=bench_path)
 		make_nginx_conf(bench_path=bench_path)
 
+		"""
 		if from_ver == 4 and to_ver == 5:
 			setup_backups(bench_path=bench_path)
 
 		if from_ver <= 5 and to_ver == 6:
 			setup_socketio(bench_path=bench_path)
+		"""
 
 		print("As you have setup your bench for production, you will have to reload configuration for nginx and supervisor")
 		print("To complete the migration, please run the following commands")
