@@ -182,7 +182,7 @@ def install_bench(args):
 
 	if not args.user:
 		if args.production:
-			args.user = 'frappe'
+			args.user = 'dokos'
 
 		elif 'SUDO_USER' in os.environ:
 			args.user = os.environ['SUDO_USER']
@@ -217,8 +217,8 @@ def install_bench(args):
 	if args.production:
 		extra_vars.update(max_worker_connections=multiprocessing.cpu_count() * 1024)
 
-	frappe_branch = 'version-12'
-	erpnext_branch = 'version-12'
+	frappe_branch = 'master'
+	erpnext_branch = 'master'
 
 	if args.version:
 		if args.version <= 10:
@@ -237,7 +237,7 @@ def install_bench(args):
 	extra_vars.update(frappe_branch=frappe_branch)
 	extra_vars.update(erpnext_branch=erpnext_branch)
 
-	bench_name = 'frappe-bench' if not args.bench_name else args.bench_name
+	bench_name = 'dokos-bench' if not args.bench_name else args.bench_name
 	extra_vars.update(bench_name=bench_name)
 
 	# Will install ERPNext production setup by default
