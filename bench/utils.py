@@ -1,7 +1,8 @@
-import os, sys, shutil, subprocess, logging, itertools, requests, json, platform, select, pwd, grp, multiprocessing, hashlib, glob, errno
-import semantic_version
+import os, sys, shutil, subprocess, logging, itertools, requests, json, platform, select, pwd, grp, multiprocessing, hashlib, glob
+
 from distutils.spawn import find_executable
 import bench
+import semantic_version
 from bench import env
 from six import iteritems, PY2
 
@@ -13,7 +14,6 @@ class CommandFailedError(Exception):
 	pass
 
 logger = logging.getLogger(__name__)
-frappe_commands_file = '.frappe-cmd'
 folders_in_bench = ('apps', 'sites', 'config', 'logs', 'config/pids')
 
 def is_bench_directory():
@@ -67,7 +67,7 @@ def init(path, apps_path=None, no_procfile=False, no_backups=False,
 		try:
 			os.makedirs(os.path.join(path, dirname))
 		except OSError as e:
-			if e.errno == errno.EEXIST:
+			if e.errno == os.errno.EEXIST:
 				pass
 
 	setup_logging()
@@ -827,34 +827,3 @@ def run_playbook(playbook_name, extra_vars=None, tag=None):
 		args.extend(['-t', tag])
 
 	subprocess.check_call(args, cwd=os.path.join(os.path.dirname(bench.__path__[0]), 'playbooks'))
-
-def generate_command_cache(bench_path='.'):
-	"""
-	Caches Frappe commands (speeds up bench commands execution)
-	Default caching behaviour: generated the first time any command is run
-	"""
-
-	python = get_env_cmd('python', bench_path=bench_path)
-	sites_path = os.path.join(bench_path, 'sites')
-
-	if os.path.exists(frappe_commands_file):
-		os.remove(frappe_commands_file)
-
-	try:
-		output = get_cmd_output("{python} -m frappe.utils.bench_helper get-frappe-commands".format(python=python), cwd=sites_path)
-		json.dump(eval(output), open(frappe_commands_file, 'w'))
-		return output
-	except subprocess.CalledProcessError as e:
-		if hasattr(e, "stderr"):
-			print(e.stderr.decode('utf-8'))
-
-def clear_command_cache(bench_path='.'):
-	"""
-	Clears commands cached
-	Default invalidation behaviour: destroyed on each run of `bench update`
-	"""
-
-	if os.path.exists(frappe_commands_file):
-		os.remove(frappe_commands_file)
-	else:
-		print("Bench command cache doesn't exist in this folder!")
