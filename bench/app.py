@@ -123,7 +123,7 @@ def get_app(name, git_url=None, branch=None, bench_path='.', skip_assets=False, 
 	shallow_clone = '--depth 1' if check_git_for_shallow_clone() else ''
 	branch = '--branch {branch}'.format(branch=branch or 'master') if branch else ''
 
-	exec_cmd("git clone {git_url} {branch} {shallow_clone} --origin upstream {name}".format(
+	exec_cmd("git clone -q {git_url} {branch} {shallow_clone} --origin upstream {name}".format(
 				git_url=git_url,
 				shallow_clone=shallow_clone,
 				branch=branch,
@@ -422,11 +422,13 @@ def get_apps_json(path):
 	with open(path) as f:
 		return json.load(f)
 
-def validate_branch(bench_path='.'):
-	for app in get_apps(bench_path=bench_path):
-		if app in ['frappe', 'erpnext']:
-			branch = get_current_branch(app)
+def validate_branch():
+	installed_apps = set(get_apps())
+	check_apps = set(['frappe', 'erpnext'])
+	intersection_apps = installed_apps.intersection(check_apps)
+	for app in intersection_apps:
+		branch = get_current_branch(app)
 
-			if branch in ["version-11", "version-12"]:
-				print(''' Please switch to branch master''')
-				sys.exit(1)
+		if branch in ["version-11", "version-12"]:
+			print(''' Please switch to branch master''')
+			sys.exit(1)

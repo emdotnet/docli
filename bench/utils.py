@@ -1,10 +1,12 @@
-import os, sys, shutil, subprocess, logging, itertools, requests, json, platform, select, pwd, grp, multiprocessing, hashlib, glob
-
+import errno, glob, grp, itertools, json, logging, multiprocessing, os, platform, pwd, re, select, shutil, site, subprocess, sys
 from distutils.spawn import find_executable
-import bench
+
+import requests
 import semantic_version
+from six import iteritems
+
+import bench
 from bench import env
-from six import iteritems, PY2
 
 
 class PatchError(Exception):
@@ -15,6 +17,13 @@ class CommandFailedError(Exception):
 
 logger = logging.getLogger(__name__)
 folders_in_bench = ('apps', 'sites', 'config', 'logs', 'config/pids')
+
+class color:
+	nc = '\033[0m'
+	blue = '\033[94m'
+	green = '\033[92m'
+	yellow = '\033[93m'
+	red = '\033[91m'
 
 def is_bench_directory(directory=os.path.curdir):
 	cur_dir = os.path.curdir
@@ -28,12 +37,12 @@ def is_bench_directory(directory=os.path.curdir):
 
 def log(message, level=0):
 	levels = {
-		0: '\033[94m',	# normal
-		1: '\033[92m',	# success
-		2: '\033[91mERROR: ',	# fail
-		3: '\033[93mWARN: '	# warn/suggest
+		0: color.blue + 'LOG',			# normal
+		1: color.green + 'SUCCESS',		# success
+		2: color.red + 'ERROR',			# fail
+		3: color.yellow + 'WARN'		# warn/suggest
 	}
-	start = levels.get(level) or ''
+	start = (levels.get(level) + ': ') if level in levels else ''
 	end = '\033[0m'
 
 	print(start + message + end)
@@ -55,23 +64,22 @@ def get_frappe(bench_path='.'):
 def get_env_cmd(cmd, bench_path='.'):
 	return os.path.abspath(os.path.join(bench_path, 'env', 'bin', cmd))
 
-def init(path, apps_path=None, no_procfile=False, no_backups=False,
-		no_auto_update=False, frappe_path=None, frappe_branch=None, wheel_cache_dir=None,
-		verbose=False, clone_from=None, skip_redis_config_generation=False,
-		clone_without_update=False,
-		ignore_exist = False, skip_assets=False,
-		python		 = 'python3'): # Let's change when we're ready. - <achilles@frappe.io>
-	from .app import get_app, install_apps_from_path
-	from .config.common_site_config import make_config
+def init(path, apps_path=None, no_procfile=False, no_backups=False, no_auto_update=False,
+		frappe_path=None, frappe_branch=None, wheel_cache_dir=None, verbose=False, clone_from=None,
+		skip_redis_config_generation=False, clone_without_update=False, ignore_exist = False, skip_assets=False, python='python3'):
+	from bench.app import get_app, install_apps_from_path
+	from bench.config import redis
 	from .config import redis
-	from .config.procfile import setup_procfile
+	from bench.config.common_site_config import make_config
+	from bench.config.procfile import setup_procfile
 	from bench.patches import set_all_patches_executed
 
-	import os.path as osp
-
-	if osp.exists(path):
-		if not ignore_exist:
-			raise ValueError('Bench Instance {path} already exists.'.format(path = path))
+	if os.path.exists(path) and not ignore_exist:
+		log('Path {path} already exists!'.format(path=path))
+		sys.exit(0)
+	elif not os.path.exists(path):
+		# only create dir if it does not exist
+		os.makedirs(path)
 	else:
 		os.makedirs(path)
 
@@ -79,12 +87,12 @@ def init(path, apps_path=None, no_procfile=False, no_backups=False,
 		try:
 			os.makedirs(os.path.join(path, dirname))
 		except OSError as e:
-			if e.errno == os.errno.EEXIST:
+			if e.errno == errno.EEXIST:
 				pass
 
 	setup_logging()
 
-	setup_env(bench_path=path, python = python)
+	setup_env(bench_path=path, python=python)
 
 	make_config(path)
 
@@ -195,7 +203,7 @@ def setup_env(bench_path='.', python = 'python3'):
 	pip    = os.path.join('env', 'bin', 'pip')
 
 	exec_cmd('virtualenv -q {} -p {}'.format('env', python), cwd=bench_path)
-	exec_cmd('{} -q install --upgrade pip wheel six'.format(pip), cwd=bench_path)
+	exec_cmd('{} -q install -U pip wheel six'.format(pip), cwd=bench_path)
 	exec_cmd('{} -q install -e git+https://github.com/frappe/python-pdfkit.git#egg=pdfkit'.format(pip), cwd=bench_path)
 
 def setup_socketio(bench_path='.'):
@@ -439,8 +447,7 @@ def set_default_site(site, bench_path='.'):
 
 def update_bench_requirements():
 	bench_req_file = os.path.join(os.path.dirname(bench.__path__[0]), 'requirements.txt')
-	user_pip = which("pip" if PY2 else "pip3")
-	install_requirements(user_pip, bench_req_file, user=True)
+	install_requirements(bench_req_file, user=True)
 
 def update_env_pip(bench_path):
 	env_pip = os.path.join(bench_path, 'env', 'bin', 'pip')
@@ -509,15 +516,18 @@ def update_npm_packages(bench_path='.'):
 
 	exec_cmd('npm install', cwd=bench_path)
 
-
-def install_requirements(pip, req_file, user=False):
+def install_requirements(req_file, user=False):
 	if os.path.exists(req_file):
-		# sys.real_prefix exists only in a virtualenv
-		if hasattr(sys, 'real_prefix'):
+		if user:
+			python = sys.executable
+		else:
+			python = os.path.join("env", "bin", "python")
+
+		if in_virtual_env():
 			user = False
 
 		user_flag = "--user" if user else ""
-		exec_cmd("{pip} install {user_flag} -q -U -r {req_file}".format(pip=pip, user_flag=user_flag, req_file=req_file))
+		exec_cmd("{python} -m pip install {user_flag} -q -U -r {req_file}".format(python=python, user_flag=user_flag, req_file=req_file))
 
 def backup_site(site, bench_path='.'):
 	run_frappe_cmd('--site', site, 'backup', bench_path=bench_path)
@@ -683,11 +693,12 @@ def post_upgrade(from_ver, to_ver, bench_path='.'):
 			setup_socketio(bench_path=bench_path)
 		"""
 
-		print("As you have setup your bench for production, you will have to reload configuration for nginx and supervisor")
-		print("To complete the migration, please run the following commands")
-		print()
-		print("sudo service nginx restart")
-		print("sudo supervisorctl reload")
+		message = """
+		As you have setup your bench for production, you will have to reload configuration for nginx and supervisor. To complete the migration, please run the following commands
+		sudo service nginx restart
+		sudo supervisorctl reload
+		""".strip()
+		print(message)
 
 def update_translations_p(args):
 	try:
@@ -867,3 +878,67 @@ def find_benches(directory=None):
 				benches.extend(find_benches(sub))
 
 	return benches
+
+def in_virtual_env():
+	# type: () -> bool
+	"""Returns a boolean, whether running in venv with no system site-packages.
+	pip really does the best job at this: virtualenv_no_global at https://raw.githubusercontent.com/pypa/pip/master/src/pip/_internal/utils/virtualenv.py
+	"""
+
+	def running_under_venv():
+		# handles PEP 405 compliant virtual environments.
+		return sys.prefix != getattr(sys, "base_prefix", sys.prefix)
+
+	def running_under_regular_virtualenv():
+		# pypa/virtualenv case
+		return hasattr(sys, 'real_prefix')
+
+	def _no_global_under_venv():
+		# type: () -> bool
+		"""Check `{sys.prefix}/pyvenv.cfg` for system site-packages inclusion
+		PEP 405 specifies that when system site-packages are not supposed to be
+		visible from a virtual environment, `pyvenv.cfg` must contain the following
+		line:
+			include-system-site-packages = false
+		Additionally, log a warning if accessing the file fails.
+		"""
+		def _get_pyvenv_cfg_lines():
+			pyvenv_cfg_file = os.path.join(sys.prefix, 'pyvenv.cfg')
+			try:
+				with open(pyvenv_cfg_file) as f:
+					return f.read().splitlines()  # avoids trailing newlines
+			except IOError:
+				return None
+
+		_INCLUDE_SYSTEM_SITE_PACKAGES_REGEX = re.compile(
+			r"include-system-site-packages\s*=\s*(?P<value>true|false)"
+		)
+		cfg_lines = _get_pyvenv_cfg_lines()
+		if cfg_lines is None:
+			# We're not in a "sane" venv, so assume there is no system
+			# site-packages access (since that's PEP 405's default state).
+			return True
+
+		for line in cfg_lines:
+			match = _INCLUDE_SYSTEM_SITE_PACKAGES_REGEX.match(line)
+			if match is not None and match.group('value') == 'false':
+				return True
+		return False
+
+	def _no_global_under_regular_virtualenv():
+		# type: () -> bool
+		"""Check if "no-global-site-packages.txt" exists beside site.py
+		This mirrors logic in pypa/virtualenv for determining whether system
+		site-packages are visible in the virtual environment.
+		"""
+		site_mod_dir = os.path.dirname(os.path.abspath(site.__file__))
+		no_global_site_packages_file = os.path.join(site_mod_dir, 'no-global-site-packages.txt')
+		return os.path.exists(no_global_site_packages_file)
+
+	if running_under_regular_virtualenv():
+		return _no_global_under_regular_virtualenv()
+
+	if running_under_venv():
+		return _no_global_under_venv()
+
+	return False
