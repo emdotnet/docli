@@ -218,10 +218,7 @@ def install_bench(args):
 	extra_vars.update(bench_name=bench_name)
 
 	# Will install ERPNext production setup by default
-	try:
-		run_playbook('site.yml', sudo=True, extra_vars=extra_vars)
-	except Exception as e:
-		print(e)
+	run_playbook('site.yml', sudo=True, extra_vars=extra_vars)
 
 	if os.path.exists(tmp_bench_repo):
 		shutil.rmtree(tmp_bench_repo)
