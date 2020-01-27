@@ -155,8 +155,7 @@ def install_package(package, package_name=None):
 
 def install_bench(args):
 	# clone bench repo
-	if not args.run_travis:
-		clone_bench_repo(args)
+	clone_bench_repo(args)
 
 	if not args.user:
 		if args.production:
@@ -253,7 +252,7 @@ def get_passwords(args):
 	"""
 
 	log("Input MySQL and Frappe Administrator passwords:")
-	ignore_prompt = args.run_travis
+	ignore_prompt = args.run_gitlab_ci
 	mysql_root_password, admin_password = '', ''
 	passwords_file_path = os.path.join(os.path.expanduser('~' + args.user), 'passwords.txt')
 
@@ -378,7 +377,7 @@ def parse_commandline_args():
 	parser.add_argument('--version', dest='version', action='store', type=int, help='Clone particular version of dodock and dokos')
 
 	# To enable testing of script using Travis, this should skip the prompt
-	parser.add_argument('--run-travis', dest='run_travis', action='store_true', default=False, help=argparse.SUPPRESS)
+	parser.add_argument('--run-gitlab-ci', dest='run_gitlab_ci', action='store_true', default=False, help=argparse.SUPPRESS)
 
 	parser.add_argument('--without-bench-setup', dest='without_bench_setup', action='store_true', default=False, help=argparse.SUPPRESS)
 

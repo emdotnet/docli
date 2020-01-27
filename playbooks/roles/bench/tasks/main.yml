@@ -75,11 +75,11 @@
 
   # Setup an ERPNext site
   - include_tasks: setup_erpnext.yml
-    when: not run_travis and not without_bench_folder
+    when: not run_gitlab_ci and not without_bench_folder
 
   # Setup Bench for production environment
   - include_tasks: setup_bench_production.yml
     vars:
       bench_path: "/home/{{ frappe_user }}/{{ bench_name }}"
-    when: not run_travis and production and not without_bench_folder
+    when: not run_gitlab_ci and production and not without_bench_folder
 ...
