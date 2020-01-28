@@ -17,6 +17,7 @@
     mode: 0644
   when: mysql_conf_tpl != 'change_me' and ansible_distribution != 'Debian'
   notify: restart mysql
+  daemon_reload: yes
 
 - include_tasks: debian.yml
   when: ansible_distribution == 'Debian'
@@ -58,6 +59,7 @@
     name: mysql
     state: started
     enabled: yes
+    daemon_reload: yes
 
 - debug:
     msg: "{{ mysql_root_password }}"
