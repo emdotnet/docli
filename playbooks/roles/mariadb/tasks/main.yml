@@ -53,11 +53,6 @@
   become_user: root
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
 
-- name: Reload daemon
-  systemd:
-    daemon_reload: yes
-  when: run_gitlab_ci
-
 - name: Start and enable service
   service:
     name: mysql
