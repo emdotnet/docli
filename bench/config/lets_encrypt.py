@@ -11,7 +11,7 @@ try:
 except ImportError:
 	from urllib import urlretrieve
 
-def setup_letsencrypt(site, custom_domain, bench_path, interactive, confirm=True):
+def setup_letsencrypt(site, custom_domain, bench_path, interactive):
 
 	site_path = os.path.join(bench_path, "sites", site, "site_config.json")
 	if not os.path.exists(os.path.dirname(site_path)):
@@ -29,7 +29,7 @@ def setup_letsencrypt(site, custom_domain, bench_path, interactive, confirm=True
 			print("No custom domain named {0} set for site".format(custom_domain))
 			return
 
-	if confirm:
+	if interactive:
 		click.confirm('Running this will stop the nginx service temporarily causing your sites to go offline\n'
 			'Do you want to continue?',
 			abort=True)
