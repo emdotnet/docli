@@ -1,10 +1,22 @@
-import os, json, click, random, string, hashlib
-from bench.utils import get_sites, get_bench_name, exec_cmd
+# imports - standard imports
+import hashlib
+import os
+import random
+import string
+
+# imports - third party imports
+import click
 from six import string_types
 
+# imports - module imports
+from bench.utils import get_sites, get_bench_name, exec_cmd
+
 def make_nginx_conf(bench_path, yes=False):
-	from bench import env
-	from bench.config.common_site_config import get_config
+	conf_path = os.path.join(bench_path, "config", "nginx.conf")
+
+	if not yes and os.path.exists(conf_path):
+		if not click.confirm('nginx.conf already exists and this will overwrite it. Do you want to continue?'):
+			return
 
 	template = env.get_template('nginx.conf')
 	bench_path = os.path.abspath(bench_path)
@@ -36,11 +48,6 @@ def make_nginx_conf(bench_path, yes=False):
 		})
 
 	nginx_conf = template.render(**template_vars)
-
-	conf_path = os.path.join(bench_path, "config", "nginx.conf")
-	if not yes and os.path.exists(conf_path):
-		click.confirm('nginx.conf already exists and this will overwrite it. Do you want to continue?',
-			abort=True)
 
 	with open(conf_path, "w") as f:
 		f.write(nginx_conf)

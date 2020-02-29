@@ -54,11 +54,12 @@ def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, n
 @click.argument('name')
 @click.argument('git-url', required=False)
 @click.option('--branch', default=None, help="branch to checkout")
+@click.option('--overwrite', is_flag=True, default=False)
 @click.option('--skip-assets', is_flag=True, default=False, help="Do not build assets")
-def get_app(name, git_url=None, branch=None, skip_assets=False):
+def get_app(git_url, branch, name=None, overwrite=False, skip_assets=False):
 	"clone an app from the internet and set it up in your bench"
 	from bench.app import get_app
-	get_app(name=name, git_url=git_url, branch=branch, skip_assets=skip_assets)
+	get_app(git_url, branch=branch, skip_assets=skip_assets, overwrite=overwrite)
 
 
 @click.command('new-app')
