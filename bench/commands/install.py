@@ -35,7 +35,7 @@ def install_mariadb(mysql_root_password, version):
 def install_wkhtmltopdf():
 	run_playbook('site.yml', extra_vars=extra_vars, tag='wkhtmltopdf')
 
-	@click.command('nodejs', help="Installs Node.js v8")
+@click.command('nodejs', help="Installs Node.js v8")
 def install_nodejs():
 	run_playbook('site.yml', extra_vars=extra_vars, tag='nodejs')
 
@@ -75,7 +75,7 @@ def install_failtoban(**kwargs):
 
 
 install.add_command(install_prerequisites)
-install.add_command(install_maridb)
+install.add_command(install_mariadb)
 install.add_command(install_wkhtmltopdf)
 install.add_command(install_nodejs)
 install.add_command(install_psutil)
