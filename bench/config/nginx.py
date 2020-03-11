@@ -9,7 +9,7 @@ import click
 from six import string_types
 
 # imports - module imports
-from bench.utils import get_sites, get_bench_name, exec_cmd
+from bench.utils import get_sites, get_bench_name
 
 def make_nginx_conf(bench_path, yes=False):
 	conf_path = os.path.join(bench_path, "config", "nginx.conf")
