@@ -1,11 +1,28 @@
-from bench.utils import get_program, exec_cmd, get_cmd_output, fix_prod_setup_perms, get_bench_name, find_executable, CommandFailedError
+# imports - standard imports
+import os
+import sys
+from distutils.spawn import find_executable
+
+# imports - module imports
+from bench.config.common_site_config import get_config
+from bench.config.nginx import make_nginx_conf
 from bench.config.supervisor import generate_supervisor_config
 from bench.config.systemd import generate_systemd_config
-from bench.config.nginx import make_nginx_conf
-from bench.config.common_site_config import get_config
-import os, subprocess
+from bench.utils import CommandFailedError, exec_cmd, fix_prod_setup_perms, get_bench_name, get_cmd_output
+
+def setup_production_prerequisites():
+	"""Installs ansible, fail2banc, NGINX and supervisor"""
+	if not find_executable("ansible"):
+		exec_cmd("sudo {0} -m pip install ansible".format(sys.executable))
+	if not find_executable("fail2ban-client"):
+		exec_cmd("bench setup role fail2ban")
+	if not find_executable("nginx"):
+		exec_cmd("bench setup role nginx")
+	if not find_executable("supervisord"):
+		exec_cmd("bench setup role supervisor")
 
 def setup_production(user, bench_path='.', yes=False):
+	setup_production_prerequisites()
 	if get_config(bench_path).get('restart_supervisor_on_update') and get_config(bench_path).get('restart_systemd_on_update'):
 		raise Exception("You cannot use supervisor and systemd at the same time. Modify your common_site_config accordingly." )
 
@@ -40,6 +57,7 @@ def setup_production(user, bench_path='.', yes=False):
 
 	reload_nginx()
 
+
 def disable_production(bench_path='.'):
 	bench_name = get_bench_name(bench_path)
 
@@ -62,21 +80,20 @@ def disable_production(bench_path='.'):
 
 	reload_nginx()
 
-def service(service, option):
-	if os.path.basename(get_program(['systemctl']) or '') == 'systemctl' and is_running_systemd():
-		exec_cmd("sudo {service_manager} {option} {service}".format(service_manager='systemctl', option=option, service=service))
-	elif os.path.basename(get_program(['service']) or '') == 'service':
-		exec_cmd("sudo {service_manager} {service} {option} ".format(service_manager='service', service=service, option=option))
+
+def service(service_name, service_option):
+	if os.path.basename(find_executable('systemctl') or '') == 'systemctl' and is_running_systemd():
+		systemctl_cmd = "sudo {service_manager} {service_option} {service_name}"
+		exec_cmd(systemctl_cmd.format(service_manager='systemctl', service_option=service_option, service_name=service_name))
+	elif os.path.basename(find_executable('service') or '') == 'service':
+		service_cmd = "sudo {service_manager} {service_name} {service_option}"
+		exec_cmd(service_cmd.format(service_manager='service', service_name=service_name, service_option=service_option))
 	else:
 		# look for 'service_manager' and 'service_manager_command' in environment
 		service_manager = os.environ.get("BENCH_SERVICE_MANAGER")
 		if service_manager:
 			service_manager_command = (os.environ.get("BENCH_SERVICE_MANAGER_COMMAND")
-				or "{service_manager} {option} {service}").format(service_manager=service_manager, service=service, option=option)
-			exec_cmd(service_manager_command)
-
-		else:
-			raise Exception('No service manager found')
+				or "{service_manager} {service_option} {service}").format(service_manager=service_manager, service=service, service_option=service_option)
 
 def get_supervisor_confdir():
 	possiblities = ('/etc/supervisor/conf.d', '/etc/supervisor.d/', '/etc/supervisord/conf.d', '/etc/supervisord.d')
@@ -109,15 +126,15 @@ def reload_supervisor():
 
 	try:
 		# first try reread/update
-		exec_cmd('sudo {0} reread'.format(supervisorctl))
-		exec_cmd('sudo {0} update'.format(supervisorctl))
+		exec_cmd('{0} reread'.format(supervisorctl))
+		exec_cmd('{0} update'.format(supervisorctl))
 		return
 	except CommandFailedError:
 		pass
 
 	try:
 		# something is wrong, so try reloading
-		exec_cmd('sudo {0} reload'.format(supervisorctl))
+		exec_cmd('{0} reload'.format(supervisorctl))
 		return
 	except CommandFailedError:
 		pass
@@ -138,7 +155,7 @@ def reload_supervisor():
 
 def reload_nginx():
 	try:
-		subprocess.check_output(['sudo', find_executable('nginx'), '-t'])
+		exec_cmd('sudo {0} -t'.format(find_executable('nginx')))
 	except:
 		raise
 
