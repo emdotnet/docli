@@ -336,7 +336,7 @@ def setup_backups(bench_path='.'):
 	logger.info('setting up backups')
 	bench_dir = get_bench_dir(bench_path=bench_path)
 
-	backup_command = "cd {bench_dir} && {bench} --site all backup".format(bench_dir=bench_dir, bench=sys.argv[0])
+	backup_command = "cd {bench_dir} && {bench} --verbose --site all backup".format(bench_dir=bench_dir, bench=sys.argv[0])
 
 	add_to_crontab('0 */6 * * *  {backup_command} >> {logfile} 2>&1'.format(backup_command=backup_command,
 		logfile=os.path.join(get_bench_dir(bench_path=bench_path), 'logs', 'backup.log')))
