@@ -76,7 +76,8 @@ def make_bench_manager_nginx_conf(bench_path, yes=False, port=23624, domain=None
 		"bench_name": bench_name,
 		"error_pages": get_error_pages(),
 		"ssl_certificate": site_config.get('ssl_certificate'),
-		"ssl_certificate_key": site_config.get('ssl_certificate_key')
+		"ssl_certificate_key": site_config.get('ssl_certificate_key'),
+		"ssl_shared_session": site_config.get('ssl_shared_session')
 	}
 
 	bench_manager_nginx_conf = template.render(**template_vars)
