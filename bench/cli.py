@@ -1,4 +1,5 @@
 # imports - standard imports
+import bench
 import atexit
 import json
 import logging
@@ -16,7 +17,7 @@ from bench.config.common_site_config import get_config
 from bench.utils import PatchError, bench_cache_file, drop_privileges, find_parent_bench, generate_command_cache, get_cmd_output, get_env_cmd, get_frappe, is_bench_directory, is_root, log
 
 
-logger = logging.getLogger('bench')
+logger = logging.getLogger(bench.PROJECT_NAME)
 from_command_line = False
 change_uid_msg = "You should not run this command as root"
 

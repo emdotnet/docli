@@ -1,7 +1,13 @@
-import os, json
+# imports - standard imports
+import json
+import os
 from bench.utils import get_sites
 from bench.config.nginx import make_nginx_conf
 from collections import defaultdict
+
+# imports - module imports
+from bench.config.nginx import make_nginx_conf
+from bench.utils import get_sites
 
 def get_site_config(site, bench_path='.'):
 	config_path = os.path.join(bench_path, 'sites', site, 'site_config.json')

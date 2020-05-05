@@ -354,7 +354,6 @@ def setup_backups(bench_path='.'):
 		system_crontab.write()
 
 def setup_sudoers(user):
-	from bench import env
 	if not os.path.exists('/etc/sudoers.d'):
 		os.makedirs('/etc/sudoers.d')
 
@@ -368,7 +367,7 @@ def setup_sudoers(user):
 		if set_permissions:
 			os.chmod('/etc/sudoers', 0o440)
 
-	template = env.get_template('frappe_sudoers')
+	template = bench.config.env.get_template('frappe_sudoers')
 	frappe_sudoers = template.render(**{
 		'user': user,
 		'service': find_executable('service'),
@@ -385,7 +384,7 @@ def setup_sudoers(user):
 
 def setup_logging(bench_path='.'):
 	if os.path.exists(os.path.join(bench_path, 'logs')):
-		logger = logging.getLogger('bench')
+		logger = logging.getLogger(bench.PROJECT_NAME)
 		log_file = os.path.join(bench_path, 'logs', 'bench.log')
 		formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 		hdlr = logging.FileHandler(log_file)
