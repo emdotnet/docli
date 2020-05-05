@@ -57,7 +57,7 @@ def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, c
 def get_app(name, git_url, branch, overwrite=False, skip_assets=False):
 	"clone an app from the internet and set it up in your bench"
 	from bench.app import get_app
-	get_app(name, git_url=None, branch=branch, skip_assets=skip_assets, overwrite=overwrite)
+	get_app(name, git_url=git_url, branch=branch, skip_assets=skip_assets, overwrite=overwrite)
 
 
 @click.command('new-app', help='Create a new Frappe application under apps folder')
