@@ -5,7 +5,7 @@ import subprocess
 
 # imports - module imports
 from bench.cli import change_uid_msg
-from bench.config.production_setup import get_supervisor_confdir, is_centos7
+from bench.config.production_setup import get_supervisor_confdir, is_centos7, service
 from bench.config.common_site_config import get_config
 from bench.utils import exec_cmd, get_bench_name, get_cmd_output
 
@@ -57,3 +57,6 @@ def execute(bench_path):
 
 		if is_production_set(bench_path):
 			exec_cmd("sudo bench setup supervisor --yes --user {user}".format(user=user))
+			service("supervisord", "restart")
+
+		exec_cmd("sudo bench setup sudoers {user}".format(user=user))
