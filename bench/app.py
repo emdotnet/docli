@@ -96,7 +96,7 @@ def remove_from_excluded_apps_txt(app, bench_path='.'):
 		return write_excluded_apps_txt(apps, bench_path=bench_path)
 
 def get_app(name, git_url=None, branch=None, bench_path='.', skip_assets=False, verbose=False,
-	postprocess = True, overwrite=False):
+	restart_bench = True, overwrite=False):
 	try:
 		from urlparse import urljoin
 	except ImportError:
@@ -165,7 +165,7 @@ def new_app(app, bench_path='.'):
 	run_frappe_cmd('make-app', apps, app, bench_path=bench_path)
 	install_app(app, bench_path=bench_path)
 
-def install_app(app, bench_path=".", verbose=False, no_cache=False, postprocess=True, skip_assets=False):
+def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_bench=True, skip_assets=False):
 	print('\n{0}Installing {1}{2}'.format(color.yellow, app, color.nc))
 	logger.log("installing {}".format(app))
 
@@ -181,7 +181,10 @@ def install_app(app, bench_path=".", verbose=False, no_cache=False, postprocess=
 
 	add_to_appstxt(app, bench_path=bench_path)
 
-	if postprocess:
+	if not skip_assets:
+		build_assets(bench_path=bench_path, app=app)
+
+	if restart_bench:
 		if not skip_assets:
 			build_assets(bench_path=bench_path, app=app)
 		conf = get_config(bench_path=bench_path)
