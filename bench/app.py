@@ -133,6 +133,7 @@ Do you want to continue and overwrite it?'''.format(repo_name)):
 			install_app(app=app_name, bench_path=bench_path, verbose=verbose, skip_assets=skip_assets)
 			sys.exit()
 
+	print('\n{0}Getting {1}{2}'.format(color.yellow, repo_name, color.nc))
 	logger.log('Getting app {0}'.format(repo_name))
 
 	exec_cmd("git clone -q {git_url} {branch} {shallow_clone} --origin upstream {name}".format(
