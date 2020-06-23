@@ -17,6 +17,7 @@ setup(
 	install_requires=install_requires,
 	entry_points='''
 [console_scripts]
+docli=bench.cli:cli
 bench=bench.cli:cli
 ''',
 )
