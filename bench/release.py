@@ -86,13 +86,16 @@ def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, own
 
 	click.confirm('Do you want to continue?', abort=True)
 
-	new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch, prerelease=prerelease)
-	commit_changes(repo_path, new_version, to_branch)
-	tag_name = create_release(repo_path, new_version, from_branch=from_branch, to_branch=to_branch, frontport=frontport)
-	push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
-	prerelease = True if 'beta' in new_version else False
-	create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease, prerelease_date=prerelease_date)
-	print('Released {tag} for {repo_path}'.format(tag=tag_name, repo_path=repo_path))
+	try:
+		new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch, prerelease=prerelease)
+		commit_changes(repo_path, new_version, to_branch)
+		tag_name = create_release(repo_path, new_version, from_branch=from_branch, to_branch=to_branch, frontport=frontport)
+		push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
+		prerelease = True if 'beta' in new_version else False
+		create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease, prerelease_date=prerelease_date)
+		print('Released {tag} for {repo_path}'.format(tag=tag_name, repo_path=repo_path))
+	except Exception as e:
+		print(e)
 
 def update_branches_and_check_for_changelog(repo_path, from_branch, to_branch, remote='upstream'):
 

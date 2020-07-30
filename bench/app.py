@@ -172,7 +172,7 @@ def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_benc
 
 	pip_path = os.path.join(bench_path, "env", "bin", "pip")
 	quiet_flag = "-q" if not verbose else ""
-	app_path = os.path.join(bench_path, "apps", app)
+	app_path = os.path.join(bench_path, "apps", app_map.get(app, app))
 	cache_flag = "--no-cache-dir" if no_cache else ""
 
 	exec_cmd("{pip} install {quiet} -U -e {app} {no_cache}".format(pip=pip_path, quiet=quiet_flag, app=app_path, no_cache=cache_flag))
@@ -180,14 +180,14 @@ def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_benc
 	if os.path.exists(os.path.join(app_path, 'package.json')):
 		exec_cmd("yarn install", cwd=app_path)
 
-	add_to_appstxt(app, bench_path=bench_path)
+	add_to_appstxt(app_map.get(app, app), bench_path=bench_path)
 
 	if not skip_assets:
 		build_assets(bench_path=bench_path, app=app)
 
 	if restart_bench:
 		if not skip_assets:
-			build_assets(bench_path=bench_path, app=app)
+			build_assets(bench_path=bench_path, app=app_map.get(app, app))
 		conf = get_config(bench_path=bench_path)
 
 		if conf.get('restart_supervisor_on_update'):
@@ -275,18 +275,18 @@ Here are your choices:
 			exec_cmd('find . -name "*.pyc" -delete', cwd=app_dir)
 
 
-def is_version_upgrade(app='frappe', bench_path='.', branch=None):
+def is_version_upgrade(app='dodock', bench_path='.', branch=None):
 	try:
-		fetch_upstream(app, bench_path=bench_path)
+		fetch_upstream(app_map.get(app, app), bench_path=bench_path)
 	except CommandFailedError:
 		raise InvalidRemoteException("No remote named upstream for {0}".format(app))
 
-	upstream_version = get_upstream_version(app=app, branch=branch, bench_path=bench_path)
+	upstream_version = get_upstream_version(app=app_map.get(app, app), branch=branch, bench_path=bench_path)
 
 	if not upstream_version:
 		raise InvalidBranchException("Specified branch of app {0} is not in upstream".format(app))
 
-	local_version = get_major_version(get_current_version(app, bench_path=bench_path))
+	local_version = get_major_version(get_current_version(app_map.get(app, app), bench_path=bench_path))
 	upstream_version = get_major_version(upstream_version)
 
 	if upstream_version - local_version > 0:
@@ -370,7 +370,7 @@ def switch_branch(branch, apps=None, bench_path='.', upgrade=False, check_upgrad
 			if os.path.isdir(os.path.join(apps_dir, name))]
 
 	for app in apps:
-		app_dir = os.path.join(apps_dir, app)
+		app_dir = os.path.join(apps_dir, app_map.get(app, app))
 		if not os.path.exists(app_dir):
 			bench.utils.log("{} does not exist!".format(app), level=2)
 			continue
