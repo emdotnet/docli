@@ -19,6 +19,7 @@ execution_time = "{:%H:%M}".format(execution_timestamp)
 log_file_name = "easy-install__{0}__{1}.log".format(execution_day, execution_time.replace(':', '-'))
 log_path = os.path.join(tmp_log_folder, log_file_name)
 log_stream = sys.stdout
+distro_required = not ((sys.version_info.major < 3) or (sys.version_info.major == 3 and sys.version_info.minor < 7))
 
 def log(message, level=0):
 	levels = {
@@ -108,11 +109,7 @@ def import_with_install(package):
 def get_distribution_info():
 	# return distribution name and major version
 	if platform.system() == "Linux":
-		if sys.version_info.major == 3 and sys.version_info.minor > 7:
-			install_package('pip3', 'python3-pip')
-
-			import_with_install('distro')
-
+		if distro_required:
 			current_dist = distro.linux_distribution(full_distribution_name=True)
 		else:
 			current_dist = platform.dist()
@@ -378,6 +375,11 @@ def run_playbook(playbook_name, sudo=False, extra_vars=None):
 	success = subprocess.check_call(args, cwd=playbooks_folder, stdout=log_stream, stderr=sys.stderr)
 	return success
 
+def setup_script_requirements():
+	if distro_required:
+		install_package('pip3', 'python3-pip')
+		import_with_install('distro')
+
 def parse_commandline_args():
 	import argparse
 
@@ -467,6 +469,7 @@ if __name__ == '__main__':
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		setup_log_stream(args)
+		setup_script_requirements()
 		check_distribution_compatibility()
 		check_system_package_managers()
 		check_environment()
