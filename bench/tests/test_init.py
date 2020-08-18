@@ -11,7 +11,7 @@ import git
 import bench
 import bench.utils
 from bench.release import get_bumped_version
-from bench.tests.test_base import TestBenchBase, FRAPPE_BRANCH
+from bench.tests.test_base import FRAPPE_BRANCH, TestBenchBase
 
 
 class TestBenchInit(TestBenchBase):
@@ -32,6 +32,13 @@ class TestBenchInit(TestBenchBase):
 		self.assert_folders(bench_name)
 		self.assert_virtual_env(bench_name)
 		self.assert_config(bench_name)
+
+
+	def basic(self):
+		try:
+			self.test_init()
+		except Exception:
+			print(self.get_traceback())
 
 
 	def test_multiple_benches(self):
@@ -136,10 +143,10 @@ class TestBenchInit(TestBenchBase):
 		bench_path = os.path.join(self.benches_path, "test-bench")
 		app_path = os.path.join(bench_path, "apps", "frappe")
 
-		successful_switch = not bench.utils.exec_cmd("bench switch-to-branch master frappe --upgrade", cwd=bench_path)
+		successful_switch = not bench.utils.exec_cmd("bench switch-to-branch version-12 frappe --upgrade", cwd=bench_path)
 		app_branch_after_switch = str(git.Repo(path=app_path).active_branch)
 		if successful_switch:
-			self.assertEqual("master", app_branch_after_switch)
+			self.assertEqual("version-12", app_branch_after_switch)
 
 		successful_switch = not bench.utils.exec_cmd("bench switch-to-branch develop frappe --upgrade", cwd=bench_path)
 		app_branch_after_second_switch = str(git.Repo(path=app_path).active_branch)
