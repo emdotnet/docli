@@ -71,7 +71,7 @@ def check_distribution_compatibility():
 	dist_name, dist_version = get_distribution_info()
 	supported_dists = {
 		'macos': [10.9, 10.10, 10.11, 10.12],
-		'ubuntu': [18, 19],
+		'ubuntu': [18, 19, 20],
 		'debian': [8, 9, 10],
 		'centos': [7]
 	}
@@ -87,10 +87,35 @@ def check_distribution_compatibility():
 	else:
 		log("Sorry, the installer doesn't support {0}. Aborting installation!".format(dist_name), level=2)
 
+def import_with_install(package):
+	# copied from https://discuss.erpnext.com/u/nikunj_patel
+	# https://discuss.erpnext.com/t/easy-install-setup-guide-for-erpnext-installation-on-ubuntu-20-04-lts-with-some-modification-of-course/62375/5
+
+	# need to move to top said v13 for fully python3 era
+	import importlib
+
+	try:
+		importlib.import_module(package)
+	except ImportError:
+		# caveat : pip3 must be installed
+
+		import pip
+
+		pip.main(['install', package])
+	finally:
+		globals()[package] = importlib.import_module(package)
+
 def get_distribution_info():
 	# return distribution name and major version
 	if platform.system() == "Linux":
-		current_dist = platform.dist()
+		if sys.version_info.major == 3 and sys.version_info.minor > 7:
+			install_package('pip3', 'python3-pip')
+
+			import_with_install('distro')
+
+			current_dist = distro.linux_distribution(full_distribution_name=True)
+		else:
+			current_dist = platform.dist()
 		return current_dist[0].lower(), current_dist[1].rsplit('.')[0]
 
 	elif platform.system() == "Darwin":
