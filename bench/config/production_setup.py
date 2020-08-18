@@ -1,13 +1,17 @@
 # imports - standard imports
 import os
+import logging
 import sys
 
 # imports - module imports
+import bench
 from bench.config.common_site_config import get_config
 from bench.config.nginx import make_nginx_conf
-from bench.config.supervisor import generate_supervisor_config
+from bench.config.supervisor import generate_supervisor_config, update_supervisord_config
 from bench.config.systemd import generate_systemd_config
-from bench.utils import CommandFailedError, exec_cmd, find_executable, fix_prod_setup_perms, get_bench_name, get_cmd_output
+from bench.utils import CommandFailedError, exec_cmd, find_executable, fix_prod_setup_perms, get_bench_name, get_cmd_output, log
+
+logger = logging.getLogger(bench.PROJECT_NAME)
 
 def setup_production_prerequisites():
 	"""Installs ansible, fail2banc, NGINX and supervisor"""
@@ -21,14 +25,20 @@ def setup_production_prerequisites():
 		exec_cmd("bench setup role supervisor")
 
 def setup_production(user, bench_path='.', yes=False):
+	print("Setting Up prerequisites...")
 	setup_production_prerequisites()
 	if get_config(bench_path).get('restart_supervisor_on_update') and get_config(bench_path).get('restart_systemd_on_update'):
 		raise Exception("You cannot use supervisor and systemd at the same time. Modify your common_site_config accordingly." )
 
 	if get_config(bench_path).get('restart_systemd_on_update'):
+		print("Setting Up systemd...")
 		generate_systemd_config(bench_path=bench_path, user=user, yes=yes)
 	else:
+		print("Setting Up supervisor...")
+		update_supervisord_config(user=user, yes=yes)
 		generate_supervisor_config(bench_path=bench_path, user=user, yes=yes)
+
+	print("Setting Up NGINX...")
 	make_nginx_conf(bench_path=bench_path, yes=yes)
 	fix_prod_setup_perms(bench_path, frappe_user=user)
 	remove_default_nginx_configs()
@@ -36,6 +46,7 @@ def setup_production(user, bench_path='.', yes=False):
 	bench_name = get_bench_name(bench_path)
 	nginx_conf = '/etc/nginx/conf.d/{bench_name}.conf'.format(bench_name=bench_name)
 
+	print("Setting Up symlinks and reloading services...")
 	if get_config(bench_path).get('restart_supervisor_on_update'):
 		supervisor_conf_extn = "ini" if is_centos7() else "conf"
 		supervisor_conf = os.path.join(get_supervisor_confdir(), '{bench_name}.{extn}'.format(
@@ -84,15 +95,21 @@ def service(service_name, service_option):
 	if os.path.basename(find_executable('systemctl') or '') == 'systemctl' and is_running_systemd():
 		systemctl_cmd = "sudo {service_manager} {service_option} {service_name}"
 		exec_cmd(systemctl_cmd.format(service_manager='systemctl', service_option=service_option, service_name=service_name))
+
 	elif os.path.basename(find_executable('service') or '') == 'service':
 		service_cmd = "sudo {service_manager} {service_name} {service_option}"
 		exec_cmd(service_cmd.format(service_manager='service', service_name=service_name, service_option=service_option))
+
 	else:
 		# look for 'service_manager' and 'service_manager_command' in environment
 		service_manager = os.environ.get("BENCH_SERVICE_MANAGER")
 		if service_manager:
 			service_manager_command = (os.environ.get("BENCH_SERVICE_MANAGER_COMMAND")
 				or "{service_manager} {service_option} {service}").format(service_manager=service_manager, service=service, service_option=service_option)
+			exec_cmd(service_manager_command)
+
+		else:
+			log("No service manager found: '{0} {1}' failed to execute".format(service_name, service_option), level=2)
 
 def get_supervisor_confdir():
 	possiblities = ('/etc/supervisor/conf.d', '/etc/supervisor.d/', '/etc/supervisord/conf.d', '/etc/supervisord.d')
