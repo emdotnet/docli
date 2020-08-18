@@ -21,6 +21,7 @@ from distutils.spawn import find_executable
 import click
 from crontab import CronTab
 import requests
+from semantic_version import Version
 from six import iteritems
 from six.moves.urllib.parse import urlparse
 
@@ -82,6 +83,22 @@ def safe_decode(string, encoding = 'utf-8'):
 	except Exception:
 		pass
 	return string
+
+def check_latest_version():
+	try:
+		pypi_request = requests.get("https://pypi.org/pypi/dokos-cli/json")
+	except Exception:
+		# Exceptions thrown are defined in requests.exceptions
+		# ignore checking on all Exceptions
+		return
+
+	if pypi_request.status_code == 200:
+		pypi_version_str = pypi_request.json().get('info').get('version')
+		pypi_version = Version(pypi_version_str)
+		local_version = Version(bench.VERSION)
+
+		if pypi_version > local_version:
+			log("A newer version of dokos-cli is available: {0} → {1}".format(local_version, pypi_version))
 
 def get_frappe(bench_path='.'):
 	frappe = get_env_cmd('frappe', bench_path=bench_path)
@@ -908,6 +925,14 @@ def migrate_env(python, backup=False):
 	except:
 		if venv_creation or packages_setup:
 			logger.warning('Migration Error')
+
+def is_dist_editable(dist):
+	"""Is distribution an editable install?"""
+	for path_item in sys.path:
+		egg_link = os.path.join(path_item, dist + '.egg-link')
+		if os.path.isfile(egg_link):
+			return True
+	return False
 
 def find_parent_bench(path):
 	"""Checks if parent directories are benches"""

@@ -14,7 +14,7 @@ import click
 from bench.app import get_apps
 from bench.commands import bench_command
 from bench.config.common_site_config import get_config
-from bench.utils import PatchError, bench_cache_file, drop_privileges, find_parent_bench, generate_command_cache, get_cmd_output, get_env_cmd, get_frappe, is_bench_directory, is_root, log, setup_logging
+from bench.utils import PatchError, bench_cache_file, drop_privileges, find_parent_bench, generate_command_cache, get_cmd_output, get_env_cmd, get_frappe, is_dist_editable, is_bench_directory, check_latest_version, is_root, log, setup_logging
 
 from_command_line = False
 change_uid_msg = "You should not run this command as root"
@@ -31,6 +31,9 @@ def cli():
 	check_uid()
 	change_dir()
 	change_uid()
+
+	if is_dist_editable(bench.PROJECT_NAME) and len(sys.argv) > 1 and sys.argv[1] != "src" and not get_config(".").get("developer_mode"):
+		log("Dokos CLI is installed in editable mode!\n\nThis is not the recommended mode of installation for production. Instead, install the package from PyPI with: `pip install dokos-cli`\n", level=3)
 
 	if not is_bench_directory() and not cmd_requires_root() and len(sys.argv) > 1 and sys.argv[1] not in ("init", "find", "src"):
 		log("Command not being executed in bench directory", level=3)
@@ -49,6 +52,9 @@ def cli():
 
 		elif sys.argv[1] in get_apps():
 			return app_cmd()
+
+	if not (len(sys.argv) > 1 and sys.argv[1] == "src"):
+		atexit.register(check_latest_version)
 
 	try:
 		bench_command()

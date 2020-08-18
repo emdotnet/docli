@@ -7,9 +7,15 @@ with open('requirements.txt') as f:
 
 setup(
 	name=PROJECT_NAME,
-	description='Metadata driven, full-stack web framework',
+	description='Command line tools for Dodock/Dokos',
+	url='https://dokos.io',
 	author='Dokos SAS',
 	author_email='hello@dokos.io',
+	classifiers=[
+		"Programming Language :: Python :: 3",
+		"License :: OSI Approved :: MIT License",
+		"Operating System :: OS Independent",
+	],
 	version=VERSION,
 	packages=find_packages(),
 	zip_safe=False,

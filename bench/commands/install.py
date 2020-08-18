@@ -18,7 +18,7 @@ def install_prerequisites():
 
 @click.command('mariadb', help="Install and setup MariaDB of specified version and root password")
 @click.option('--mysql_root_password', '--mysql-root-password', default="")
-@click.option('--version', default="10.3")
+@click.option('--version', default="10.4")
 def install_mariadb(mysql_root_password, version):
 	if mysql_root_password:
 		extra_vars.update({
