@@ -12,7 +12,6 @@ import click
 @click.option('--clone-without-update', is_flag=True, help="copy repos from path without update")
 @click.option('--no-procfile', is_flag=True, help="Pull changes in all the apps in bench")
 @click.option('--no-backups',is_flag=True, help="Run migrations for all sites in the bench")
-@click.option('--no-auto-update',is_flag=True, help="Build JS and CSS artifacts for the bench")
 @click.option('--skip-redis-config-generation', is_flag=True, help="Skip redis config generation if already specifying the common-site-config file")
 @click.option('--skip-assets',is_flag=True, default=False, help="Do not build assets")
 @click.option('--verbose',is_flag=True, help="Verbose output during install")
@@ -32,9 +31,9 @@ def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, c
 			clone_without_update=clone_without_update,
 			ignore_exist=ignore_exist,
 			skip_assets=skip_assets,
-			python =python
+			python=python
 		)
-		log('Bench {} initialized'.format(path))
+		log('Bench {} initialized'.format(path), level=1)
 	except SystemExit:
 		pass
 	except Exception as e:

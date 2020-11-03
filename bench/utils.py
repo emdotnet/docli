@@ -110,11 +110,13 @@ def get_frappe(bench_path='.'):
 def get_env_cmd(cmd, bench_path='.'):
 	return os.path.abspath(os.path.join(bench_path, 'env', 'bin', cmd))
 
-def init(path, apps_path=None, no_procfile=False, no_backups=False, frappe_path=None, frappe_branch=None, verbose=False, clone_from=None, skip_redis_config_generation=False, clone_without_update=False, ignore_exist=False, skip_assets=False, python='python3'):
+def init(path, apps_path=None, no_procfile=False, no_backups=False,
+		frappe_path=None, frappe_branch=None, verbose=False, clone_from=None,
+		skip_redis_config_generation=False, clone_without_update=False, ignore_exist=False, skip_assets=False,
+		python='python3'):
 	"""Initialize a new bench directory"""
 	from bench.app import get_app, install_apps_from_path
 	from bench.config import redis
-	from .config import redis
 	from bench.config.common_site_config import make_config
 	from bench.config.procfile import setup_procfile
 	from bench.patches import set_all_patches_executed
@@ -124,8 +126,6 @@ def init(path, apps_path=None, no_procfile=False, no_backups=False, frappe_path=
 		sys.exit(0)
 	elif not os.path.exists(path):
 		# only create dir if it does not exist
-		os.makedirs(path)
-	else:
 		os.makedirs(path)
 
 	for dirname in folders_in_bench:
@@ -318,11 +318,13 @@ def get_venv_path():
 
 def setup_env(bench_path='.', python='python3'):
 	frappe = os.path.join(bench_path, "apps", "frappe")
-	pip = os.path.join(".", "env", "bin", "pip")
+	pip = os.path.join(bench_path, "env", "bin", "pip")
 	virtualenv = get_venv_path()
 
 	exec_cmd('{} -q env -p {}'.format(virtualenv, python), cwd=bench_path)
-	exec_cmd('{} install -q -U -e {}'.format(pip, frappe), cwd=bench_path)
+
+	if os.path.exists(frappe):
+		exec_cmd('{} install -q -U -e {}'.format(pip, frappe), cwd=bench_path)
 
 def setup_socketio(bench_path='.'):
 	exec_cmd("npm install socket.io redis express superagent cookie babel-core less chokidar \
