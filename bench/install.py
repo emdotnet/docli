@@ -189,9 +189,9 @@ def install_bench(args):
 		run_os_command({
 			'python3': "sudo -H python3 -m pip install --upgrade dokos-cli"
 		})
-	else:
-		# clone bench repo
-		clone_bench_repo(args)
+
+	# clone bench repo
+	clone_bench_repo(args)
 
 	if not args.user:
 		if args.production:
