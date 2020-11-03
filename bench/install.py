@@ -19,7 +19,7 @@ execution_time = "{:%H:%M}".format(execution_timestamp)
 log_file_name = "easy-install__{0}__{1}.log".format(execution_day, execution_time.replace(':', '-'))
 log_path = os.path.join(tmp_log_folder, log_file_name)
 log_stream = sys.stdout
-distro_required = not ((sys.version_info.major < 3) or (sys.version_info.major == 3 and sys.version_info.minor < 9))
+distro_required = not ((sys.version_info.major < 3) or (sys.version_info.major == 3 and sys.version_info.minor < 9 and sys.version_info.minor > 5))
 
 def log(message, level=0):
 	levels = {
@@ -205,7 +205,7 @@ def install_bench(args):
 	# Python executable
 	dist_name, dist_version = get_distribution_info()
 	if dist_name=='centos':
-		args.python = 'python3.6'
+		args.python = 'python3.7'
 	else:
 		args.python = 'python3'
 

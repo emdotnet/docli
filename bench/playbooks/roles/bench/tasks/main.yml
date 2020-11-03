@@ -39,13 +39,7 @@
     command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
     args:
       creates: "{{ bench_path }}"
-    when: not bench_stat.stat.exists and not production and not without_bench_folder
-
-  - name: python3 bench init for production
-    command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
-    args:
-      creates: "{{ bench_path }}"
-    when: not bench_stat.stat.exists and production and not without_bench_folder
+    when: not bench_stat.stat.exists and not without_bench_folder
 
   # setup common_site_config
   - name: setup config
