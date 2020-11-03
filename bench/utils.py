@@ -358,6 +358,7 @@ def setup_backups(bench_path='.'):
 	bench_dir = os.path.abspath(bench_path)
 	user = get_config(bench_path=bench_dir).get('frappe_user')
 	logfile = os.path.join(bench_dir, 'logs', 'backup.log')
+	system_crontab = CronTab(user=user)
 
 	backup_command = "cd {bench_dir} && {bench} --verbose --site all backup".format(bench_dir=bench_dir, bench=sys.argv[0])
 
