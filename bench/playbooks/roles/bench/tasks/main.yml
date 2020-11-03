@@ -19,12 +19,20 @@
       extra_args: '-e'
     become: yes
     become_user: root
+    when: not production
+
+  - name: install bench
+    pip:
+      name: 'dokos-cli'
+    become: yes
+    become_user: root
+    when: production
 
   - name: Overwrite bench if required
     file:
       state: absent
       path: "{{ bench_path }}"
-    when: overwrite
+    when: overwrite and not production
 
   - name: Check whether bench exists
     stat:
@@ -39,7 +47,7 @@
     command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
     args:
       creates: "{{ bench_path }}"
-    when: not bench_stat.stat.exists and not without_bench_folder
+    when: (not bench_stat.stat.exists or production) and not without_bench_folder
 
   # setup common_site_config
   - name: setup config

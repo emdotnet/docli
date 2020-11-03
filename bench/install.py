@@ -52,7 +52,7 @@ def check_environment():
 			message += "\nexport {0}=C.UTF-8".format(var)
 
 	if message:
-		log("Bench's CLI needs these to be defined!", level=3)
+		log("Dokos CLI needs these to be defined!", level=3)
 		log("Run the following commands in shell: {0}".format(message), level=2)
 		sys.exit()
 
@@ -185,11 +185,6 @@ def install_package(package, package_name=None):
 
 
 def install_bench(args):
-	if args.production:
-		run_os_command({
-			'python3': "sudo -H python3 -m pip install --upgrade dokos-cli"
-		})
-
 	# clone bench repo
 	clone_bench_repo(args)
 
