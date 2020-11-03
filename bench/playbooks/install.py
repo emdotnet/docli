@@ -257,7 +257,7 @@ def install_bench(args):
 
 def clone_bench_repo(args):
 	'''Clones the bench repository in the user folder'''
-	branch = args.bench_branch or 'master'
+	branch = args.bench_branch or 'develop'
 	repo_url = args.repo_url or 'https://gitlab.com/dokos/docli.git'
 
 	if os.path.exists(tmp_bench_repo):
@@ -469,11 +469,11 @@ if __name__ == '__main__':
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		setup_log_stream(args)
+		install_prerequisites()
 		setup_script_requirements()
 		check_distribution_compatibility()
 		check_system_package_managers()
 		check_environment()
-		install_prerequisites()
 		install_bench(args)
 
 	log('''Dokos has been successfully installed!''')
