@@ -18,6 +18,7 @@ from bench.utils import PatchError, bench_cache_file, drop_privileges, find_pare
 
 from_command_line = False
 change_uid_msg = "You should not run this command as root"
+src = os.path.dirname(__file__)
 
 
 def cli():
