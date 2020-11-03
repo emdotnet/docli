@@ -78,7 +78,6 @@ def check_distribution_compatibility():
 	}
 
 	log("Checking System Compatibility...")
-	dist_name, dist_version = get_distribution_info()
 	if dist_name in supported_dists:
 		if float(dist_version) in supported_dists[dist_name]:
 			log("{0} {1} is compatible!".format(dist_name, dist_version), level=1)
@@ -186,8 +185,13 @@ def install_package(package, package_name=None):
 
 
 def install_bench(args):
-	# clone bench repo
-	clone_bench_repo(args)
+	if args.production:
+		run_os_command({
+			'python3': "sudo -H python3 -m pip install --upgrade dokos-cli"
+		})
+	else:
+		# clone bench repo
+		clone_bench_repo(args)
 
 	if not args.user:
 		if args.production:
@@ -284,7 +288,7 @@ def get_passwords(args):
 	"""
 
 	log("Input MySQL and Frappe Administrator passwords:")
-	ignore_prompt = args.run_gitlab_ci
+	ignore_prompt = args.run_gitlab_ci or args.without_bench_setup
 	mysql_root_password, admin_password = '', ''
 	passwords_file_path = os.path.join(os.path.expanduser('~' + args.user), 'passwords.txt')
 

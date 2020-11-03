@@ -44,5 +44,5 @@
     bench_path: "/home/{{ frappe_user }}/{{ bench_name }}"
   roles:
   # setup frappe-bench
-    - { role: bench, tags: "bench", when: not run_gitlab_ci and not without_bench_setup }
+    - { role: bench, tags: "bench", when: not run_gitlab_ci and not without_bench_setup and not production }
 ...
