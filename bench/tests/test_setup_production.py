@@ -67,7 +67,7 @@ class TestSetupProduction(TestBenchBase):
 
 
 	def assert_sudoers(self, user):
-		sudoers_file = '/etc/sudoers.d/frappe'
+		sudoers_file = '/etc/sudoers.d/dodock'
 		service = bench.utils.which("service")
 		nginx = bench.utils.which("nginx")
 
