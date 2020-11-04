@@ -49,7 +49,6 @@ class color:
 	silver = '\033[90m'
 
 def is_bench_directory(directory=os.path.curdir):
-	cur_dir = os.path.curdir
 	is_bench = True
 
 	for folder in folders_in_bench:
@@ -344,12 +343,8 @@ def build_assets(bench_path='.', app=None):
 
 def get_sites(bench_path='.'):
 	sites_path = os.path.join(bench_path, 'sites')
-	sites = []
 	sites = (site for site in os.listdir(sites_path) if os.path.exists(os.path.join(sites_path, site, 'site_config.json')))
 	return sites
-
-def get_sites_dir(bench_path='.'):
-	return os.path.abspath(os.path.join(bench_path, 'sites'))
 
 def setup_backups(bench_path='.'):
 	from bench.config.common_site_config import get_config
@@ -366,7 +361,7 @@ def setup_backups(bench_path='.'):
 
 	if job_command not in str(system_crontab):
 		job = system_crontab.new(command=job_command, comment="bench auto backups set for every 6 hours")
-		job.hour.every(6)
+		job.every(6).hours()
 		system_crontab.write()
 
 def setup_sudoers(user):
@@ -388,7 +383,7 @@ def setup_sudoers(user):
 		'user': user,
 		'service': find_executable('service'),
 		'systemctl': find_executable('systemctl'),
-		'nginx': find_executable('nginx')
+		'nginx': find_executable('nginx'),
 	})
 	frappe_sudoers = safe_decode(frappe_sudoers)
 
@@ -562,7 +557,7 @@ def update_yarn_packages(bench_path='.'):
 	for app in os.listdir(apps_dir):
 		app_path = os.path.join(apps_dir, app)
 		if os.path.exists(os.path.join(app_path, 'package.json')):
-			print('\nRunning "yarn install" for {0}'.format(app))
+			print('\n{0}Installing node dependencies for {1}{2}'.format(color.yellow, app, color.nc))
 			exec_cmd('yarn install', cwd=app_path)
 
 
@@ -919,6 +914,7 @@ def migrate_env(python, backup=False):
 		shutil.move(dest, target)
 
 	# Create virtualenv using specified python
+	venv_creation, packages_setup = 1, 1
 	try:
 		logger.log('Setting up a New Virtual {} Environment'.format(python))
 		venv_creation = exec_cmd('{virtualenv} --python {python} {pvenv}'.format(virtualenv=virtualenv, python=python, pvenv=pvenv))

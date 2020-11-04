@@ -1,5 +1,4 @@
 # imports - standard imports
-import bench
 import atexit
 import json
 import logging
@@ -11,10 +10,11 @@ import sys
 import click
 
 # imports - module imports
+import bench
 from bench.app import get_apps
 from bench.commands import bench_command
 from bench.config.common_site_config import get_config
-from bench.utils import PatchError, bench_cache_file, drop_privileges, find_parent_bench, generate_command_cache, get_cmd_output, get_env_cmd, get_frappe, is_dist_editable, is_bench_directory, check_latest_version, is_root, log, setup_logging
+from bench.utils import PatchError, bench_cache_file, check_latest_version, drop_privileges, find_parent_bench, generate_command_cache, get_cmd_output, get_env_cmd, get_frappe, is_bench_directory, is_dist_editable, is_root, log, setup_logging
 
 from_command_line = False
 change_uid_msg = "You should not run this command as root"
@@ -65,7 +65,7 @@ def cli():
 		return_code = getattr(e, "code", 0)
 		if return_code:
 			logger.warning("{0} executed with exit code {1}".format(command, return_code))
-		sys.exit(1)
+		sys.exit(return_code)
 
 
 def check_uid():
