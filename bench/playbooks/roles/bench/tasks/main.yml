@@ -75,8 +75,8 @@
       chdir: "{{ bench_path }}"
     when: not without_bench_folder
 
-  # Setup an ERPNext site
-  - include_tasks: setup_erpnext.yml
+  # Setup a Dokos site
+  - include_tasks: setup_dokos.yml
     when: not run_gitlab_ci and not without_bench_folder
 
   # Setup Bench for production environment
