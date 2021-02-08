@@ -163,7 +163,7 @@ def install_prerequisites():
 	success = run_os_command({
 		'python3': [
 			"sudo -H python3 -m pip install --upgrade pip",
-			"sudo -H python3 -m pip install --upgrade setuptools cryptography ansible==2.8.5"
+			"sudo -H python3 -m pip install --upgrade setuptools cryptography ansible~=2.8.15"
 		]
 	})
 
