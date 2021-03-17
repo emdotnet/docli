@@ -6,20 +6,14 @@ import json
 import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
 
 # imports - third party imports
 import click
-import git
-import requests
-import semantic_version
-from six.moves import reload_module
 
 # imports - module imports
 import bench
-from bench.config.common_site_config import get_config
 from bench.utils import color, CommandFailedError, build_assets, check_git_for_shallow_clone, exec_cmd, get_cmd_output, get_frappe, restart_supervisor_processes, restart_systemd_processes, run_frappe_cmd
 
 
@@ -97,10 +91,8 @@ def remove_from_excluded_apps_txt(app, bench_path='.'):
 
 def get_app(name, git_url=None, branch=None, bench_path='.', skip_assets=False, verbose=False,
 	restart_bench = True, overwrite=False):
-	try:
-		from urlparse import urljoin
-	except ImportError:
-		from urllib.parse import urljoin
+	import requests
+	import shutil
 
 	if not git_url or not is_git_url(git_url):
 		url = 'https://gitlab.com/api/v4/groups/4823361/projects/'
@@ -167,6 +159,8 @@ def new_app(app, bench_path='.'):
 	install_app(app, bench_path=bench_path)
 
 def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_bench=True, skip_assets=False):
+	from bench.config.common_site_config import get_config
+
 	print('\n{0}Installing {1}{2}'.format(color.yellow, app, color.nc))
 	logger.log("installing {}".format(app))
 
@@ -196,6 +190,9 @@ def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_benc
 			restart_systemd_processes(bench_path=bench_path)
 
 def remove_app(app, bench_path='.'):
+	import shutil
+	from bench.config.common_site_config import get_config
+
 	if app not in get_apps(bench_path):
 		print("No app named {0}".format(app))
 		sys.exit(1)
@@ -223,6 +220,8 @@ def remove_app(app, bench_path='.'):
 
 def pull_apps(apps=None, bench_path='.', reset=False):
 	'''Check all apps if there no local changes, pull'''
+	from bench.config.common_site_config import get_config
+
 	rebase = '--rebase' if get_config(bench_path).get('rebase_on_pull') else ''
 
 	apps = apps or get_apps(bench_path=bench_path)
@@ -360,6 +359,8 @@ def get_repo_dir(app, bench_path='.'):
 	return os.path.join(bench_path, 'apps', app)
 
 def switch_branch(branch, apps=None, bench_path='.', upgrade=False, check_upgrade=True):
+	import git
+	from six.moves import reload_module
 	from bench.utils import update_requirements, update_node_packages, backup_all_sites, patch_sites, build_assets, post_upgrade
 	apps_dir = os.path.join(bench_path, 'apps')
 	version_upgrade = (False,)
@@ -425,6 +426,8 @@ def get_version_from_string(contents, field='__version__'):
 	return match.group(2)
 
 def get_major_version(version):
+	import semantic_version
+
 	return semantic_version.Version(version).major
 
 def install_apps_from_path(path, bench_path='.'):
@@ -433,6 +436,8 @@ def install_apps_from_path(path, bench_path='.'):
 		get_app(app['url'], branch=app.get('branch'), bench_path=bench_path, skip_assets=True)
 
 def get_apps_json(path):
+	import requests
+
 	if path.startswith('http'):
 		r = requests.get(path)
 		return r.json()

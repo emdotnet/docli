@@ -6,12 +6,10 @@ import grp
 import itertools
 import json
 import logging
-import multiprocessing
 import os
 import pwd
 import re
 import select
-import shutil
 import site
 import subprocess
 import sys
@@ -20,11 +18,7 @@ from distutils.spawn import find_executable
 
 # imports - third party imports
 import click
-from crontab import CronTab
-import requests
-from semantic_version import Version
 from six import iteritems
-from six.moves.urllib.parse import urlparse
 
 # imports - module imports
 import bench
@@ -85,6 +79,9 @@ def safe_decode(string, encoding = 'utf-8'):
 	return string
 
 def check_latest_version():
+	import requests
+	from semantic_version import Version
+
 	try:
 		pypi_request = requests.get("https://pypi.org/pypi/dokos-cli/json")
 	except Exception:
@@ -248,6 +245,8 @@ def update(pull=False, apps=None, patch=False, build=False, requirements=False, 
 	print("_" * 80 + "\Docli: Deployment tool for Dodock and Dokos Applications (https://gitlab.com/dokos/docli).\nOpen source depends on your contributions, so please contribute bug reports, patches, fixes or cash and be a part of the community")
 
 def copy_patches_txt(bench_path):
+	import shutil
+
 	shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'patches', 'patches.txt'),
 		os.path.join(bench_path, 'patches.txt'))
 
@@ -352,6 +351,7 @@ def get_sites(bench_path='.'):
 	return sites
 
 def setup_backups(bench_path='.'):
+	from crontab import CronTab
 	from bench.config.common_site_config import get_config
 	logger.log('setting up backups')
 
@@ -383,7 +383,7 @@ def setup_sudoers(user):
 		if set_permissions:
 			os.chmod('/etc/sudoers', 0o440)
 
-	template = bench.config.env.get_template('frappe_sudoers')
+	template = bench.config.env().get_template('frappe_sudoers')
 	frappe_sudoers = template.render(**{
 		'user': user,
 		'service': find_executable('service'),
@@ -735,12 +735,16 @@ def post_upgrade(from_ver, to_ver, bench_path='.'):
 		print(message)
 
 def update_translations_p(args):
+	import requests
+
 	try:
 		update_translations(*args)
 	except requests.exceptions.HTTPError:
 		print('Download failed for', args[0], args[1])
 
 def download_translations_p():
+	import multiprocessing
+
 	pool = multiprocessing.Pool(multiprocessing.cpu_count())
 
 	langs = get_langs()
@@ -762,6 +766,8 @@ def get_langs():
 	return [d['code'] for d in langs]
 
 def update_translations(app, lang):
+	import requests
+
 	translations_dir = os.path.join('apps', app, app, 'translations')
 	csv_file = os.path.join(translations_dir, lang + '.csv')
 	url = "https://translate.erpnext.com/files/{}-{}.csv".format(app, lang)
@@ -808,6 +814,8 @@ def get_bench_name(bench_path):
 	return os.path.basename(os.path.abspath(bench_path))
 
 def setup_fonts():
+	import shutil
+
 	fonts_path = os.path.join('/tmp', 'fonts')
 
 	if os.path.exists('/etc/fonts_backup'):
@@ -878,6 +886,8 @@ def find_benches(directory=None):
 	return benches
 
 def migrate_env(python, backup=False):
+	import shutil
+	from six.moves.urllib.parse import urlparse
 	from bench.config.common_site_config import get_config
 	from bench.app import get_apps
 
