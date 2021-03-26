@@ -1,4 +1,4 @@
-VERSION = "2.1.6"
+VERSION = "2.0.0-dev"
 PROJECT_NAME = "dokos-cli"
 FRAPPE_VERSION = None
 
