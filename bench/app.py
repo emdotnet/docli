@@ -381,7 +381,7 @@ def switch_branch(branch, apps=None, bench_path='.', upgrade=False, check_upgrad
 		unshallow_flag = os.path.exists(os.path.join(app_dir, ".git", "shallow"))
 		bench.utils.log("Fetching upstream {0}for {1}".format("unshallow " if unshallow_flag else "", app))
 
-		bench.utils.exec_cmd("git remote set-branches upstream  '*'", cwd=app_dir)
+		bench.utils.exec_cmd("git remote set-branches upstream '*'", cwd=app_dir)
 
 		bench.utils.exec_cmd("git fetch --all{0} --quiet".format(" --unshallow" if unshallow_flag else ""), cwd=app_dir)
 
