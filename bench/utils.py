@@ -676,10 +676,6 @@ def fix_prod_setup_perms(bench_path='.', frappe_user=None):
 			gid = grp.getgrnam(frappe_user).gr_gid
 			os.chown(path, uid, gid)
 
-def get_current_frappe_version(bench_path='.'):
-	from .app import get_current_frappe_version as fv
-	return fv(bench_path=bench_path)
-
 def run_frappe_cmd(*args, **kwargs):
 	from .cli import from_command_line
 
