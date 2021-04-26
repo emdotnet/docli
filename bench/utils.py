@@ -904,6 +904,7 @@ def migrate_env(python, backup=False):
 	python = which(python)
 	virtualenv = which('virtualenv')
 	pvenv = os.path.join(path, nvenv)
+	env_py = os.path.join(pvenv, "bin", "python")
 
 	# Clear Cache before Bench Dies.
 	try:
@@ -944,7 +945,7 @@ def migrate_env(python, backup=False):
 		venv_creation = exec_cmd('{virtualenv} --python {python} {pvenv}'.format(virtualenv=virtualenv, python=python, pvenv=pvenv))
 
 		apps = ' '.join(["-e {}".format(os.path.join("apps", app)) for app in get_apps()])
-		packages_setup = exec_cmd('{0} -m pip install -q -U {1}'.format(pvenv, apps))
+		packages_setup = exec_cmd('{0} -m pip install -q -U {1}'.format(env_py, apps))
 
 		logger.log('Migration Successful to {}'.format(python))
 	except:

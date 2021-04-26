@@ -31,6 +31,9 @@ releasable_branches = ['master']
 def release(bench_path, app, bump_type, from_branch, to_branch,
 		remote='upstream', owner='dokos', prerelease=False, prerelease_date=None, repo_name=None, frontport=True):
 
+	reversed_app_map = {v: k for k, v in app_map.items()}
+	app = reversed_app_map.get(app, app)
+
 	confirm_testing()
 	config = get_config(bench_path)
 
@@ -47,8 +50,11 @@ def release(bench_path, app, bump_type, from_branch, to_branch,
 
 	gitlab = authenticate(bench_path, config)
 
-	bump(gitlab, bench_path, app, bump_type, from_branch=from_branch, to_branch=to_branch, owner=owner,
-		prerelease=prerelease, prerelease_date=prerelease_date, repo_name=repo_name, remote=remote, frontport=frontport)
+	try:
+		bump(gitlab, bench_path, app, bump_type, from_branch=from_branch, to_branch=to_branch, owner=owner,
+			prerelease=prerelease, prerelease_date=prerelease_date, repo_name=repo_name, remote=remote, frontport=frontport)
+	except Exception as e:
+		print("Release error: ", e)
 
 def authenticate(bench_path, config):
 	gitlab_token = config.get('gitlab_token')
