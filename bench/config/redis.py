@@ -8,7 +8,7 @@ import bench
 from bench.config.common_site_config import get_config
 
 def generate_config(bench_path):
-	from six.moves.urllib.parse import urlparse
+	from urllib.parse import urlparse
 
 	config = get_config(bench_path)
 
@@ -68,7 +68,7 @@ def get_redis_version():
 		return None
 
 	version = semantic_version.Version(version[0], partial=True)
-	return float('{major}.{minor}'.format(major=version.major, minor=version.minor))
+	return float(f'{version.major}.{version.minor}')
 
 def get_max_redis_memory():
 	try:
