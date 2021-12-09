@@ -13,3 +13,4 @@
 {% endif %}
 {{ user }} ALL = (root) NOPASSWD: /opt/certbot-auto
 Defaults:{{ user }} !requiretty
+
