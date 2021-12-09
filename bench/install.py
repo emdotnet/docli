@@ -241,8 +241,8 @@ def install_bench(args):
 	if args.production:
 		extra_vars.update(max_worker_connections=multiprocessing.cpu_count() * 1024)
 
-	frappe_branch = 'develop'
-	erpnext_branch = 'develop'
+	frappe_branch = 'master'
+	erpnext_branch = 'master'
 
 	if args.frappe_branch:
 		frappe_branch = args.frappe_branch
