@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 from bench import PROJECT_NAME, VERSION
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
 	install_requires = f.read().strip().split('\n')
 
 setup(
