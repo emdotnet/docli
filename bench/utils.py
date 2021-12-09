@@ -390,29 +390,30 @@ def setup_backups(bench_path='.'):
 		system_crontab.write()
 
 def setup_sudoers(user):
-	if not os.path.exists('/etc/sudoers.d'):
-		os.makedirs('/etc/sudoers.d')
+	if not os.path.exists("/etc/sudoers.d"):
+		os.makedirs("/etc/sudoers.d")
 
 		set_permissions = False
-		if not os.path.exists('/etc/sudoers'):
+		if not os.path.exists("/etc/sudoers"):
 			set_permissions = True
 
-		with open('/etc/sudoers', 'a') as f:
-			f.write('\n#includedir /etc/sudoers.d\n')
+		with open("/etc/sudoers", "a") as f:
+			f.write("\n#includedir /etc/sudoers.d\n")
 
 		if set_permissions:
-			os.chmod('/etc/sudoers', 0o440)
+			os.chmod("/etc/sudoers", 0o440)
 
-	template = bench.config.env().get_template('frappe_sudoers')
-	frappe_sudoers = template.render(**{
-		'user': user,
-		'service': which('service'),
-		'systemctl': which('systemctl'),
-		'nginx': which('nginx'),
-	})
-	frappe_sudoers = safe_decode(frappe_sudoers)
+	template = bench.config.env().get_template("frappe_sudoers")
+	frappe_sudoers = template.render(
+		**{
+			"user": user,
+			"service": which("service"),
+			"systemctl": which("systemctl"),
+			"nginx": which("nginx"),
+		}
+	)
 
-	with open(sudoers_file, 'w') as f:
+	with open(sudoers_file, "w") as f:
 		f.write(frappe_sudoers)
 
 	os.chmod(sudoers_file, 0o440)
