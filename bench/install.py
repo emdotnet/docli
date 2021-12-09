@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-import os, sys, subprocess, getpass, json, multiprocessing, shutil, platform, warnings, datetime
+
+from __future__ import print_function
+
+import os
+import sys
+import subprocess
+import getpass
+import json
+import platform
+import multiprocessing
+import shutil
+import warnings
+import datetime
 
 tmp_bench_repo = os.path.join('/', 'tmp', '.bench')
 tmp_log_folder = os.path.join('/', 'tmp', 'logs')
@@ -9,6 +21,7 @@ execution_time = "{:%H:%M}".format(execution_timestamp)
 log_file_name = "easy-install__{0}__{1}.log".format(execution_day, execution_time.replace(':', '-'))
 log_path = os.path.join(tmp_log_folder, log_file_name)
 log_stream = sys.stdout
+distro_required = not ((sys.version_info.major < 3) or (sys.version_info.major == 3 and sys.version_info.minor < 5))
 
 def log(message, level=0):
 	levels = {
@@ -41,7 +54,7 @@ def check_environment():
 			message += "\nexport {0}=C.UTF-8".format(var)
 
 	if message:
-		log("Bench's CLI needs these to be defined!", level=3)
+		log("Dokos CLI needs these to be defined!", level=3)
 		log("Run the following commands in shell: {0}".format(message), level=2)
 		sys.exit()
 
@@ -61,13 +74,12 @@ def check_distribution_compatibility():
 	dist_name, dist_version = get_distribution_info()
 	supported_dists = {
 		'macos': [10.9, 10.10, 10.11, 10.12],
-		'ubuntu': [18, 19],
+		'ubuntu': [20],
 		'debian': [10],
 		'centos': [7]
 	}
 
 	log("Checking System Compatibility...")
-	dist_name, dist_version = get_distribution_info()
 	if dist_name in supported_dists:
 		if float(dist_version) in supported_dists[dist_name]:
 			log("{0} {1} is compatible!".format(dist_name, dist_version), level=1)
@@ -77,10 +89,32 @@ def check_distribution_compatibility():
 	else:
 		log("Sorry, the installer doesn't support {0}. Aborting installation!".format(dist_name), level=2)
 
+def import_with_install(package):
+	# copied from https://discuss.erpnext.com/u/nikunj_patel
+	# https://discuss.erpnext.com/t/easy-install-setup-guide-for-erpnext-installation-on-ubuntu-20-04-lts-with-some-modification-of-course/62375/5
+
+	# need to move to top said v13 for fully python3 era
+	import importlib
+
+	try:
+		importlib.import_module(package)
+	except ImportError:
+		# caveat : pip3 must be installed
+
+		import pip
+
+		pip.main(['install', package])
+	finally:
+		globals()[package] = importlib.import_module(package)
+
 def get_distribution_info():
 	# return distribution name and major version
 	if platform.system() == "Linux":
-		current_dist = platform.dist()
+		if distro_required:
+			current_dist = distro.linux_distribution(full_distribution_name=False)
+		else:
+			current_dist = platform.dist()
+
 		return current_dist[0].lower(), current_dist[1].rsplit('.')[0]
 
 	elif platform.system() == "Darwin":
@@ -115,6 +149,14 @@ def install_prerequisites():
 		]
 	})
 
+	# until psycopg2-binary is available for aarch64 (Arm 64-bit), we'll need libpq and libssl dev packages to build psycopg2 from source
+	if platform.machine() == 'aarch64':
+		log("Installing libpq and libssl dev packages to build psycopg2 for aarch64...")
+		run_os_command({
+			'apt-get': ['sudo apt-get install -y libpq-dev libssl-dev'],
+			'yum': ['sudo yum install -y libpq-devel openssl-devel']
+		})
+
 	install_package('curl')
 	install_package('wget')
 	install_package('git')
@@ -123,7 +165,7 @@ def install_prerequisites():
 	success = run_os_command({
 		'python3': [
 			"sudo -H python3 -m pip install --upgrade pip",
-			"sudo -H python3 -m pip install --upgrade setuptools cryptography ansible==2.8.5"
+			"sudo -H python3 -m pip install --upgrade setuptools cryptography ansible~=2.8.15"
 		]
 	})
 
@@ -176,13 +218,15 @@ def install_bench(args):
 	# Python executable
 	dist_name, dist_version = get_distribution_info()
 	if dist_name=='centos':
-		args.python = 'python3.6'
+		args.python = 'python3.7'
 	else:
 		args.python = 'python3'
 
 	# create user if not exists
 	extra_vars = vars(args)
 	extra_vars.update(frappe_user=args.user)
+
+	extra_vars.update(user_directory=get_user_home_directory(args.user))
 
 	if os.path.exists(tmp_bench_repo):
 		repo_path = tmp_bench_repo
@@ -197,22 +241,14 @@ def install_bench(args):
 	if args.production:
 		extra_vars.update(max_worker_connections=multiprocessing.cpu_count() * 1024)
 
-	frappe_branch = 'master'
-	erpnext_branch = 'master'
+	frappe_branch = 'develop'
+	erpnext_branch = 'develop'
 
-	if args.version:
-		if args.version <= 10:
-			frappe_branch = "{0}.x.x".format(args.version)
-			erpnext_branch = "{0}.x.x".format(args.version)
-		else:
-			frappe_branch = "version-{0}".format(args.version)
-			erpnext_branch = "version-{0}".format(args.version)
-	else:
-		if args.frappe_branch:
-			frappe_branch = args.frappe_branch
+	if args.frappe_branch:
+		frappe_branch = args.frappe_branch
 
-		if args.erpnext_branch:
-			erpnext_branch = args.erpnext_branch
+	if args.erpnext_branch:
+		erpnext_branch = args.erpnext_branch
 
 	extra_vars.update(frappe_branch=frappe_branch)
 	extra_vars.update(erpnext_branch=erpnext_branch)
@@ -221,6 +257,10 @@ def install_bench(args):
 	extra_vars.update(bench_name=bench_name)
 
 	# Will install ERPNext production setup by default
+	if args.without_erpnext:
+		log("Initializing bench {bench_name}:\n\tDodock Branch: {frappe_branch}\n\tDokos will not be installed due to --without-erpnext".format(bench_name=bench_name, frappe_branch=frappe_branch))
+	else:
+		log("Initializing bench {bench_name}:\n\tDodock Branch: {frappe_branch}\n\tDokos Branch: {erpnext_branch}".format(bench_name=bench_name, frappe_branch=frappe_branch, erpnext_branch=erpnext_branch))
 	run_playbook('site.yml', sudo=True, extra_vars=extra_vars)
 
 	if os.path.exists(tmp_bench_repo):
@@ -228,15 +268,19 @@ def install_bench(args):
 
 def clone_bench_repo(args):
 	'''Clones the bench repository in the user folder'''
-	branch = args.bench_branch or 'master'
+	branch = args.bench_branch or 'develop'
 	repo_url = args.repo_url or 'https://gitlab.com/dokos/docli.git'
 
 	if os.path.exists(tmp_bench_repo):
+		log('Not cloning already existing Bench repository at {tmp_bench_repo}'.format(tmp_bench_repo=tmp_bench_repo))
 		return 0
 	elif args.without_bench_setup:
 		clone_path = os.path.join(os.path.expanduser('~'), 'bench')
+		log('--without-bench-setup specified, clone path is: {clone_path}'.format(clone_path=clone_path))
 	else:
 		clone_path = tmp_bench_repo
+		# Not logging repo_url to avoid accidental credential leak in case credential is embedded in URL
+		log('Cloning bench repository branch {branch} into {clone_path}'.format(branch=branch, clone_path=clone_path))
 
 	success = run_os_command(
 		{'git': 'git clone --quiet {repo_url} {bench_repo} --depth 1 --branch {branch}'.format(
@@ -255,7 +299,7 @@ def get_passwords(args):
 	"""
 
 	log("Input MySQL and Frappe Administrator passwords:")
-	ignore_prompt = args.run_gitlab_ci
+	ignore_prompt = args.run_gitlab_ci or args.without_bench_setup
 	mysql_root_password, admin_password = '', ''
 	passwords_file_path = os.path.join(os.path.expanduser('~' + args.user), 'passwords.txt')
 
@@ -285,8 +329,8 @@ def get_passwords(args):
 					mysql_root_password = ''
 					continue
 
-			# admin password
-			if not admin_password:
+			# admin password, only needed if we're also creating a site
+			if not admin_password and not args.without_site:
 				admin_password = getpass.unix_getpass(prompt='Please enter the default Administrator user password: ')
 				conf_admin_passswd = getpass.unix_getpass(prompt='Re-enter Administrator password: ')
 
@@ -294,6 +338,8 @@ def get_passwords(args):
 					passwords_didnt_match("Administrator")
 					admin_password = ''
 					continue
+			elif args.without_site:
+				log("Not creating a new site due to --without-site")
 
 			pass_set = False
 	else:
@@ -324,6 +370,11 @@ def get_extra_vars_json(extra_args):
 
 	return ('@' + json_path)
 
+def get_user_home_directory(user):
+	# Return home directory /home/USERNAME or anything else defined as home directory in
+	# passwd for user.
+	return os.path.expanduser('~'+user)
+
 def run_playbook(playbook_name, sudo=False, extra_vars=None):
 	args = ['ansible-playbook', '-c', 'local',  playbook_name , '-vvvv']
 
@@ -339,8 +390,17 @@ def run_playbook(playbook_name, sudo=False, extra_vars=None):
 	else:
 		cwd = os.path.join(os.path.expanduser('~'), 'bench')
 
-	success = subprocess.check_call(args, cwd=os.path.join(cwd, 'playbooks'), stdout=log_stream, stderr=sys.stderr)
+	playbooks_locations = [os.path.join(cwd, 'bench', 'playbooks'), os.path.join(cwd, 'playbooks')]
+
+	playbooks_folder = [x for x in playbooks_locations if os.path.exists(x)][0]
+
+	success = subprocess.check_call(args, cwd=playbooks_folder, stdout=log_stream, stderr=sys.stderr)
 	return success
+
+def setup_script_requirements():
+	if distro_required:
+		install_package('pip3', 'python3-pip')
+		import_with_install('distro')
 
 def parse_commandline_args():
 	import argparse
@@ -354,27 +414,27 @@ def parse_commandline_args():
 
 	args_group.add_argument('--production', dest='production', action='store_true', default=False, help='Setup Production environment for bench')
 
-	parser.add_argument('--site', dest='site', action='store', default='site1.local', help='Specifiy name for your first dokos site')
+	parser.add_argument('--site', dest='site', action='store', default='site1.local', help='Specify name for your first dokos site')
 
-	parser.add_argument('--without-site', dest='without_site', action='store_true', default=False)
+	parser.add_argument('--without-site', dest='without_site', action='store_true', default=False, help='Do not create a new site')
 
 	parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Run the script in verbose mode')
 
-	parser.add_argument('--user', dest='user', help='Install frappe-bench for this user')
+	parser.add_argument('--user', dest='user', help='Install dokos-bench for this user')
 
 	parser.add_argument('--bench-branch', dest='bench_branch', help='Clone a particular branch of bench repository')
 
 	parser.add_argument('--repo-url', dest='repo_url', help='Clone bench from the given url')
 
-	parser.add_argument('--frappe-repo-url', dest='frappe_repo_url', action='store', default='https://gitlab.com/dokos/dodock', help='Clone dodock from the given url')
+	parser.add_argument('--dodock-repo-url', dest='frappe_repo_url', action='store', default='https://gitlab.com/dokos/dodock', help='Clone dodock from the given url')
 
-	parser.add_argument('--frappe-branch', dest='frappe_branch', action='store', help='Clone a particular branch of dodock')
+	parser.add_argument('--dodock-branch', dest='frappe_branch', action='store', help='Clone a particular branch of dodock')
 
-	parser.add_argument('--erpnext-repo-url', dest='erpnext_repo_url', action='store', default='https://gitlab.com/dokos/dokos', help='Clone dokos from the given url')
+	parser.add_argument('--dokos-repo-url', dest='erpnext_repo_url', action='store', default='https://gitlab.com/dokos/dokos', help='Clone dokos from the given url')
 
-	parser.add_argument('--erpnext-branch', dest='erpnext_branch', action='store', help='Clone a particular branch of dokos')
+	parser.add_argument('--dokos-branch', dest='erpnext_branch', action='store', help='Clone a particular branch of dokos')
 
-	parser.add_argument('--without-erpnext', dest='without_erpnext', action='store_true', default=False, help='Prevent fetching dokos')
+	parser.add_argument('--without-dokos', dest='without_erpnext', action='store_true', default=False, help='Prevent fetching dokos')
 
 	# direct provision to install versions
 	parser.add_argument('--version', dest='version', action='store', type=int, help='Clone particular version of dodock and dokos')
@@ -407,21 +467,35 @@ def parse_commandline_args():
 
 if __name__ == '__main__':
 	if sys.version[0] == '2':
-		if not raw_input("It is recommended to run this script with Python 3\nDo you still wish to continue? [Y/n]: ").lower() == "y":
-			sys.exit()
+		if not os.environ.get('CI'):
+			if not raw_input("It is recommended to run this script with Python 3\nDo you still wish to continue? [Y/n]: ").lower() == "y":
+				sys.exit()
+
+		try:
+			from distutils.spawn import find_executable
+		except ImportError:
+			try:
+				subprocess.check_call('pip install --upgrade setuptools')
+			except subprocess.CalledProcessError:
+				print("Install distutils or use Python3 to run the script")
+				sys.exit(1)
+
+		shutil.which = find_executable
 
 	if not is_sudo_user():
 		log("Please run this script as a non-root user with sudo privileges", level=3)
 		sys.exit()
 
 	args = parse_commandline_args()
+
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		setup_log_stream(args)
+		install_prerequisites()
+		setup_script_requirements()
 		check_distribution_compatibility()
 		check_system_package_managers()
 		check_environment()
-		install_prerequisites()
 		install_bench(args)
 
 	log('''Dokos has been successfully installed!''')

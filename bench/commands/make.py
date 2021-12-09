@@ -1,24 +1,21 @@
+# imports - third party imports
 import click
 
-@click.command()
+@click.command('init', help='Initialize a new bench instance in the specified path')
 @click.argument('path')
 @click.option('--python', type = str, default = 'python3', help = 'Path to Python Executable.')
 @click.option('--ignore-exist', is_flag = True, default = False, help = "Ignore if Bench instance exists.")
 @click.option('--apps_path', default=None, help="path to json files with apps to install after init")
-@click.option('--frappe-path', default=None, help="path to frappe repo")
-@click.option('--frappe-branch', default=None, help="path to frappe repo")
+@click.option('--frappe-path', default=None, help="path to dodock repo")
+@click.option('--frappe-branch', default=None, help="Clone a particular branch of Dodock")
 @click.option('--clone-from', default=None, help="copy repos from path")
 @click.option('--clone-without-update', is_flag=True, help="copy repos from path without update")
-@click.option('--no-procfile', is_flag=True, help="Pull changes in all the apps in bench")
-@click.option('--no-backups',is_flag=True, help="Run migrations for all sites in the bench")
-@click.option('--no-auto-update',is_flag=True, help="Build JS and CSS artifacts for the bench")
+@click.option('--no-procfile', is_flag=True, help="Do not create a Procfile")
+@click.option('--no-backups',is_flag=True, help="Do not set up automatic periodic backups for all sites on this bench")
 @click.option('--skip-redis-config-generation', is_flag=True, help="Skip redis config generation if already specifying the common-site-config file")
 @click.option('--skip-assets',is_flag=True, default=False, help="Do not build assets")
 @click.option('--verbose',is_flag=True, help="Verbose output during install")
-def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, no_auto_update, clone_from, verbose, skip_redis_config_generation, clone_without_update, ignore_exist=False, skip_assets=False, python='python3'):
-	'''
-	Create a New Bench Instance.
-	'''
+def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, clone_from, verbose, skip_redis_config_generation, clone_without_update, ignore_exist=False, skip_assets=False, python='python3'):
 	from bench.utils import init, log
 	try:
 		init(
@@ -26,7 +23,6 @@ def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, n
 			apps_path=apps_path,
 			no_procfile=no_procfile,
 			no_backups=no_backups,
-			no_auto_update=no_auto_update,
 			frappe_path=frappe_path,
 			frappe_branch=frappe_branch,
 			verbose=verbose,
@@ -35,33 +31,35 @@ def init(path, apps_path, frappe_path, frappe_branch, no_procfile, no_backups, n
 			clone_without_update=clone_without_update,
 			ignore_exist=ignore_exist,
 			skip_assets=skip_assets,
-			python =python
+			python=python
 		)
-		log('Bench {} initialized'.format(path))
+		log(f'Bench {path} initialized', level=1)
 	except SystemExit:
 		pass
-	except:
-		import os, shutil, time, six
+	except Exception as e:
+		import os, shutil, time
 		# add a sleep here so that the traceback of other processes doesnt overlap with the prompts
 		time.sleep(1)
-		log("There was a problem while creating {}".format(path), level=2)
-		if six.moves.input("Do you want to rollback these changes? [Y/n]: ").lower() == "y":
-			print('Rolling back Bench "{}"'.format(path))
+		print(e)
+		log(f"There was a problem while creating {path}", level=2)
+		if click.confirm("Do you want to rollback these changes?"):
+			print(f'Rolling back Bench "{path}"')
 			if os.path.exists(path):
 				shutil.rmtree(path)
 
-@click.command('get-app')
-@click.argument('name')
+@click.command('get-app', help='Clone an app from the internet or filesystem and set it up in your bench')
+@click.argument('name', required=True)
 @click.argument('git-url', required=False)
 @click.option('--branch', default=None, help="branch to checkout")
+@click.option('--overwrite', is_flag=True, default=False)
 @click.option('--skip-assets', is_flag=True, default=False, help="Do not build assets")
-def get_app(name, git_url=None, branch=None, skip_assets=False):
+def get_app(name, git_url, branch, overwrite=False, skip_assets=False):
 	"clone an app from the internet and set it up in your bench"
 	from bench.app import get_app
-	get_app(name=name, git_url=git_url, branch=branch, skip_assets=skip_assets)
+	get_app(name, git_url=git_url, branch=branch, skip_assets=skip_assets, overwrite=overwrite)
 
 
-@click.command('new-app')
+@click.command('new-app', help='Create a new Frappe application under apps folder')
 @click.argument('app-name')
 def new_app(app_name):
 	"start a new app"
@@ -69,7 +67,7 @@ def new_app(app_name):
 	new_app(app_name)
 
 
-@click.command('remove-app')
+@click.command('remove-app', help='Completely remove app from bench and re-build assets if not installed on any site')
 @click.argument('app-name')
 def remove_app(app_name):
 	"completely remove app from bench"
@@ -77,18 +75,16 @@ def remove_app(app_name):
 	remove_app(app_name)
 
 
-@click.command('exclude-app')
+@click.command('exclude-app', help='Exclude app from updating')
 @click.argument('app_name')
 def exclude_app_for_update(app_name):
-	"Exclude app from updating"
 	from bench.app import add_to_excluded_apps_txt
 	add_to_excluded_apps_txt(app_name)
 
 
-@click.command('include-app')
+@click.command('include-app', help='Include app for updating')
 @click.argument('app_name')
 def include_app_for_update(app_name):
-	"Include app from updating"
 	from bench.app import remove_from_excluded_apps_txt
 	remove_from_excluded_apps_txt(app_name)
 
@@ -99,5 +95,5 @@ def pip(ctx, args):
 	"Run pip commands in bench env"
 	import os
 	from bench.utils import get_env_cmd
-	env_pip = get_env_cmd('pip')
-	os.execv(env_pip, (env_pip,) + args)
+	env_py = get_env_cmd('python')
+	os.execv(env_py, (env_py, '-m', 'pip') + args)

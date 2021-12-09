@@ -1,16 +1,28 @@
-import os, json, click, random, string, hashlib
-from bench.utils import get_sites, get_bench_name, exec_cmd
-from six import string_types
+# imports - standard imports
+import hashlib
+import os
+import random
+import string
+
+# imports - third party imports
+import click
+
+# imports - module imports
+import bench
+from bench.utils import get_sites, get_bench_name
 
 def make_nginx_conf(bench_path, yes=False):
-	from bench import env
-	from bench.config.common_site_config import get_config
+	conf_path = os.path.join(bench_path, "config", "nginx.conf")
 
-	template = env.get_template('nginx.conf')
+	if not yes and os.path.exists(conf_path):
+		if not click.confirm('nginx.conf already exists and this will overwrite it. Do you want to continue?'):
+			return
+
+	template = bench.config.env().get_template('nginx.conf')
 	bench_path = os.path.abspath(bench_path)
 	sites_path = os.path.join(bench_path, "sites")
 
-	config = get_config(bench_path)
+	config = bench.config.common_site_config.get_config(bench_path)
 	sites = prepare_sites(config, bench_path)
 	bench_name = get_bench_name(bench_path)
 
@@ -37,26 +49,19 @@ def make_nginx_conf(bench_path, yes=False):
 
 	nginx_conf = template.render(**template_vars)
 
-	conf_path = os.path.join(bench_path, "config", "nginx.conf")
-	if not yes and os.path.exists(conf_path):
-		click.confirm('nginx.conf already exists and this will overwrite it. Do you want to continue?',
-			abort=True)
-
 	with open(conf_path, "w") as f:
 		f.write(nginx_conf)
 
 def make_bench_manager_nginx_conf(bench_path, yes=False, port=23624, domain=None):
-	from bench import env
 	from bench.config.site_config import get_site_config
 	from bench.config.common_site_config import get_config
 
-	template = env.get_template('bench_manager_nginx.conf')
+	template = bench.config.env().get_template('bench_manager_nginx.conf')
 	bench_path = os.path.abspath(bench_path)
 	sites_path = os.path.join(bench_path, "sites")
 
 	config = get_config(bench_path)
 	site_config = get_site_config(domain, bench_path=bench_path)
-	sites = prepare_sites(config, bench_path)
 	bench_name = get_bench_name(bench_path)
 
 	template_vars = {
@@ -70,7 +75,8 @@ def make_bench_manager_nginx_conf(bench_path, yes=False, port=23624, domain=None
 		"bench_name": bench_name,
 		"error_pages": get_error_pages(),
 		"ssl_certificate": site_config.get('ssl_certificate'),
-		"ssl_certificate_key": site_config.get('ssl_certificate_key')
+		"ssl_certificate_key": site_config.get('ssl_certificate_key'),
+		"ssl_shared_session": site_config.get('ssl_shared_session')
 	}
 
 	bench_manager_nginx_conf = template.render(**template_vars)
@@ -141,9 +147,6 @@ def prepare_sites(config, bench_path):
 				while site["port"] in ports_in_use:
 					site["port"] += 1
 
-#			if site["port"] in ports_in_use:
-#				raise Exception("Port {0} is being used by another site {1}".format(site["port"], ports_in_use[site["port"]]))
-
 			if site["port"] in ports_in_use and not site["name"] in ports_in_use[site["port"]]:
 				shared_port_exception_found = True
 				ports_in_use[site["port"]].append(site["name"])
@@ -160,17 +163,15 @@ def prepare_sites(config, bench_path):
 		for port_number in ports_in_use:
 			if len(ports_in_use[port_number]) > 1:
 				port_conflict_index += 1
-				message += "\n{0} - Port {1} is shared among sites:".format(port_conflict_index,port_number)
+				message += f"\n{port_conflict_index} - Port {port_number} is shared among sites:"
 				for site_name in ports_in_use[port_number]:
-					message += " {0}".format(site_name)
+					message += f" {site_name}"
 		raise Exception(message)
 
 	if not dns_multitenant:
 		message = "Port configuration list:"
-		port_config_index = 0
 		for site in sites_configs:
-			port_config_index += 1
-			message += "\n\nSite {0} assigned port: {1}".format(site["name"], site["port"])
+			message += f"\n\nSite {site['name']} assigned port: {site['port']}"
 
 		print(message)
 
@@ -193,13 +194,13 @@ def get_sites_with_config(bench_path):
 		except Exception as e:
 			strict_nginx = get_config(bench_path).get('strict_nginx')
 			if strict_nginx:
-				print("\n\nERROR: The site config for the site {} is broken.".format(site),
+				print(f"\n\nERROR: The site config for the site {site} is broken.",
 					"If you want this command to pass, instead of just throwing an error,",
 					"You may remove the 'strict_nginx' flag from common_site_config.json or set it to 0",
 					"\n\n")
 				raise (e)
 			else:
-				print("\n\nWARNING: The site config for the site {} is broken.".format(site),
+				print(f"\n\nWARNING: The site config for the site {site} is broken.",
 					"If you want this command to fail, instead of just showing a warning,",
 					"You may add the 'strict_nginx' flag to common_site_config.json and set it to 1",
 					"\n\n")
@@ -215,7 +216,7 @@ def get_sites_with_config(bench_path):
 		if dns_multitenant and site_config.get('domains'):
 			for domain in site_config.get('domains'):
 				# domain can be a string or a dict with 'domain', 'ssl_certificate', 'ssl_certificate_key'
-				if isinstance(domain, string_types):
+				if isinstance(domain, str):
 					domain = { 'domain': domain }
 
 				domain['name'] = site

@@ -1,6 +1,6 @@
 ---
 
-- name: Install IUS repo for python 3.6
+- name: Install IUS repo for python 3
   become: yes
   become_user: root
   yum:

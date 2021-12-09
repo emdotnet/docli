@@ -19,12 +19,20 @@
       extra_args: '-e'
     become: yes
     become_user: root
+    when: not production
+
+  - name: install bench
+    pip:
+      name: 'dokos-cli'
+    become: yes
+    become_user: root
+    when: production
 
   - name: Overwrite bench if required
     file:
       state: absent
       path: "{{ bench_path }}"
-    when: overwrite
+    when: overwrite and not production
 
   - name: Check whether bench exists
     stat:
@@ -33,19 +41,13 @@
 
   - name: Fix permissions
     become_user: root
-    command: chown {{ frappe_user }} -R /home/{{ frappe_user }}
+    command: chown {{ frappe_user }} -R {{ user_directory }}
 
-  - name:  python3 bench init for develop
+  - name:  python3 bench init
     command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
     args:
       creates: "{{ bench_path }}"
-    when: not bench_stat.stat.exists and not production and not without_bench_folder
-
-  - name: python3 bench init for production
-    command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
-    args:
-      creates: "{{ bench_path }}"
-    when: not bench_stat.stat.exists and production and not without_bench_folder
+    when: (not bench_stat.stat.exists or production) and not without_bench_folder
 
   # setup common_site_config
   - name: setup config
@@ -73,13 +75,13 @@
       chdir: "{{ bench_path }}"
     when: not without_bench_folder
 
-  # Setup an ERPNext site
-  - include_tasks: setup_erpnext.yml
+  # Setup a Dokos site
+  - include_tasks: setup_dokos.yml
     when: not run_gitlab_ci and not without_bench_folder
 
   # Setup Bench for production environment
   - include_tasks: setup_bench_production.yml
     vars:
-      bench_path: "/home/{{ frappe_user }}/{{ bench_name }}"
+      bench_path: "{{ user_directory }}/{{ bench_name }}"
     when: not run_gitlab_ci and production and not without_bench_folder
 ...

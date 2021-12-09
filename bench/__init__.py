@@ -1,9 +1,5 @@
-from jinja2 import Environment, PackageLoader
-
-__version__ = "2.0.0"
-
-env = Environment(loader=PackageLoader('bench.config'))
-
+VERSION = "2.0.0"
+PROJECT_NAME = "dokos-cli"
 FRAPPE_VERSION = None
 
 def set_frappe_version(bench_path='.'):
