@@ -3,10 +3,10 @@ import click
 
 # imports - module imports
 from bench.app import pull_apps
-from bench.utils import post_upgrade, patch_sites, build_assets
+from bench.utils.bench import post_upgrade, patch_sites, build_assets
 
 
-@click.command('update', help="Updates bench tool and if executed in a bench directory, without any flags will backup, pull, setup requirements, build, run patches and restart bench. Using specific flags will only do certain tasks instead of all")
+@click.command('update', help="Performs an update operation on current bench. Without any flags will backup, pull, setup requirements, build, run patches and restart bench. Using specific flags will only do certain tasks instead of all")
 @click.option('--pull', is_flag=True, help="Pull updates for all the apps in bench")
 @click.option('--apps', type=str)
 @click.option('--patch', is_flag=True, help="Run migrations for all sites in the bench")
@@ -19,7 +19,7 @@ from bench.utils import post_upgrade, patch_sites, build_assets
 @click.option('--force', is_flag=True, help="Forces major version upgrades")
 @click.option('--reset', is_flag=True, help="Hard resets git branch's to their new states overriding any changes and overriding rebase on pull")
 def update(pull, apps, patch, build, requirements, restart_supervisor, restart_systemd, no_backup, no_compile, force, reset):
-	from bench.utils import update
+	from bench.utils.bench import update
 	update(pull=pull, apps=apps, patch=patch, build=build, requirements=requirements, restart_supervisor=restart_supervisor, restart_systemd=restart_systemd, backup=not no_backup, compile=not no_compile, force=force, reset=reset)
 
 
@@ -37,18 +37,12 @@ def retry_upgrade(version):
 @click.argument('apps', nargs=-1)
 @click.option('--upgrade',is_flag=True)
 def switch_to_branch(branch, apps, upgrade=False):
-	from bench.app import switch_to_branch
+	from bench.utils.app import switch_to_branch
 	switch_to_branch(branch=branch, apps=list(apps), upgrade=upgrade)
 
 
-@click.command('switch-to-master', help="Switch frappe and erpnext to master branch")
-def switch_to_master():
-	from bench.app import switch_to_master
-	switch_to_master(apps=['frappe', 'erpnext'])
-
-
 @click.command('switch-to-develop')
-def switch_to_develop():
+def switch_to_develop(upgrade=False):
 	"Switch frappe and erpnext to develop branch"
-	from bench.app import switch_to_develop
+	from bench.utils.app import switch_to_develop
 	switch_to_develop(apps=['frappe', 'erpnext'])

@@ -7,20 +7,23 @@ import os
 import bench
 from bench.app import use_rq
 from bench.utils import get_bench_name, which
-from bench.config.common_site_config import get_config, update_config, get_gunicorn_workers
+from bench.bench import Bench
+from bench.config.common_site_config import update_config, get_gunicorn_workers
 
 # imports - third party imports
 import click
 
+
 logger = logging.getLogger(bench.PROJECT_NAME)
+
 
 def generate_supervisor_config(bench_path, user=None, yes=False, skip_redis=False):
 	"""Generate supervisor config for respective bench path"""
 	if not user:
 		user = getpass.getuser()
 
+	config = Bench(bench_path).conf
 	template = bench.config.env().get_template('supervisor.conf')
-	config = get_config(bench_path=bench_path)
 	bench_dir = os.path.abspath(bench_path)
 
 	config = template.render(**{

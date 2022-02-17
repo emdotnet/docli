@@ -10,6 +10,7 @@ import re
 from requests.auth import HTTPBasicAuth
 import requests.exceptions
 from time import sleep
+from bench.exceptions import ValidationError
 from .config.common_site_config import get_config
 import click
 import gitlab
@@ -163,41 +164,44 @@ def get_current_version(repo_path, to_branch):
 				contents)
 		return match.group(2)
 
-def get_bumped_version(version, bump_type, prerelease=False):
+def get_bumped_version(version, bump_type):
 	v = semantic_version.Version(version)
-	if prerelease:
-		if v.prerelease == ():
-			v.prerelease = ('beta', '1')
-
-		elif len(v.prerelease) == 2:
-			v.prerelease = ('beta', str(int(v.prerelease[1]) + 1))
-
-		else:
-			raise ("Something wen't wrong while doing a prerelease")
-
 	if bump_type == 'major':
 		v.major += 1
 		v.minor = 0
 		v.patch = 0
+		v.prerelease = None
 
 	elif bump_type == 'minor':
 		v.minor += 1
 		v.patch = 0
+		v.prerelease = None
 
 	elif bump_type == 'patch':
-		v.patch += 1
+		if v.prerelease == ():
+			v.patch += 1
+			v.prerelease = None
+
+		elif len(v.prerelease) == 2:
+			v.prerelease = ()
 
 	elif bump_type == 'stable':
 		# remove pre-release tag
 		v.prerelease = None
 
 	elif bump_type == 'prerelease':
-		pass
+		if v.prerelease == ():
+			v.patch += 1
+			v.prerelease = ('beta', '1')
+
+		elif len(v.prerelease) == 2:
+			v.prerelease = ('beta', str(int(v.prerelease[1]) + 1))
+
+		else:
+			raise ValidationError("Something wen't wrong while doing a prerelease")
 
 	else:
-		raise ("bump_type not amongst [major, minor, patch, prerelease]")
-
-	click.confirm('Do you want to create version {version}?'.format(version=str(v)), abort=True)
+		raise ValidationError("bump_type not amongst [major, minor, patch, prerelease]")
 
 	return str(v)
 
