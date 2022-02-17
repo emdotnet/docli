@@ -428,16 +428,16 @@ def parse_commandline_args():
 
 	parser.add_argument('--dodock-repo-url', dest='frappe_repo_url', action='store', default='https://gitlab.com/dokos/dodock', help='Clone dodock from the given url')
 
-	parser.add_argument('--dodock-branch', dest='frappe_branch', action='store', help='Clone a particular branch of dodock')
+	parser.add_argument('--dodock-branch', dest='frappe_branch', default='master', action='store', help='Clone a particular branch of dodock')
 
 	parser.add_argument('--dokos-repo-url', dest='erpnext_repo_url', action='store', default='https://gitlab.com/dokos/dokos', help='Clone dokos from the given url')
 
-	parser.add_argument('--dokos-branch', dest='erpnext_branch', action='store', help='Clone a particular branch of dokos')
+	parser.add_argument('--dokos-branch', dest='erpnext_branch', default='master', action='store', help='Clone a particular branch of dokos')
 
 	parser.add_argument('--without-dokos', dest='without_erpnext', action='store_true', default=False, help='Prevent fetching dokos')
 
 	# direct provision to install versions
-	parser.add_argument('--version', dest='version', action='store', type=int, help='Clone particular version of dodock and dokos')
+	#parser.add_argument('--version', dest='version', action='store', type=int, help='Clone particular version of dodock and dokos')
 
 	# To enable testing of script using Travis, this should skip the prompt
 	parser.add_argument('--run-gitlab-ci', dest='run_gitlab_ci', action='store_true', default=False, help=argparse.SUPPRESS)
