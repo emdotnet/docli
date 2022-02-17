@@ -545,7 +545,7 @@ def set_default_site(site, bench_path='.'):
 	exec_cmd(f"{get_frappe(bench_path)} --use {site}", cwd=os.path.join(bench_path, 'sites'))
 
 def update_env_pip(bench_path):
-	env_py = os.path.join(bench_path, 'env', 'bin', 'python')
+	env_py = get_env_cmd("python")
 	exec_cmd(f"{env_py} -m pip install -q -U pip")
 
 def update_requirements(bench_path='.'):
@@ -560,7 +560,7 @@ def update_requirements(bench_path='.'):
 
 def update_python_packages(bench_path='.'):
 	from bench.app import get_apps
-	env_py = os.path.join(bench_path, "env", "bin", "python")
+	env_py = get_env_cmd("python")
 	print('Updating Python libraries...')
 
 	update_env_pip(bench_path)
@@ -573,6 +573,25 @@ def update_node_packages(bench_path='.'):
 	print('Updating node packages...')
 
 	update_yarn_packages(bench_path)
+
+def install_python_dev_dependencies(bench_path='.', apps=None):
+	from bench.app import get_apps
+
+	if isinstance(apps, str):
+		apps = [apps]
+	elif apps is None:
+		apps = get_apps()
+
+	env_py = get_env_cmd("python")
+	for app in apps:
+		app_path = os.path.join(bench_path, "apps", app)
+		dev_requirements_path = os.path.join(app_path, "dev-requirements.txt")
+
+		if os.path.exists(dev_requirements_path):
+			log(f'Installing python development dependencies for {app}')
+			exec_cmd(f"{env_py} -m pip install -q -r {dev_requirements_path}", cwd=bench_path)
+		else:
+			log(f'dev-requirements.txt not found in {app}', level=3)
 
 def update_yarn_packages(bench_path='.'):
 	apps_dir = os.path.join(bench_path, 'apps')

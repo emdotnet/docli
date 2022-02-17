@@ -184,10 +184,15 @@ def install_app(app, bench_path=".", verbose=False, no_cache=False, restart_benc
 	if not skip_assets:
 		build_assets(bench_path=bench_path, app=app)
 
+	conf = get_config(bench_path=bench_path)
+
+	if conf.get("developer_mode"):
+		from bench.utils import install_python_dev_dependencies
+		install_python_dev_dependencies(apps=app_map.get(app, app))
+
 	if restart_bench:
 		if not skip_assets:
 			build_assets(bench_path=bench_path, app=app_map.get(app, app))
-		conf = get_config(bench_path=bench_path)
 
 		if conf.get('restart_supervisor_on_update'):
 			restart_supervisor_processes(bench_path=bench_path)
