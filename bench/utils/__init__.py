@@ -84,7 +84,7 @@ def check_latest_version():
 	from semantic_version import Version
 
 	try:
-		pypi_request = requests.get("https://pypi.org/pypi/frappe-bench/json")
+		pypi_request = requests.get("https://pypi.org/pypi/dokos-cli/json")
 	except Exception:
 		# Exceptions thrown are defined in requests.exceptions
 		# ignore checking on all Exceptions

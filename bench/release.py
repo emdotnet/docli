@@ -53,7 +53,7 @@ def release(bench_path, app, bump_type, from_branch, to_branch,
 
 	try:
 		bump(gitlab, bench_path, app, bump_type, from_branch=from_branch, to_branch=to_branch, owner=owner,
-			prerelease=prerelease, prerelease_date=prerelease_date, repo_name=repo_name, remote=remote, frontport=frontport)
+			repo_name=repo_name, remote=remote, frontport=frontport)
 	except Exception as e:
 		print("Release error: ", e)
 
@@ -74,8 +74,7 @@ def confirm_testing():
 	click.confirm('Is manual testing done ?', abort = True)
 	click.confirm('Have you added a change log ?', abort = True)
 
-def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, owner, \
-	prerelease=False, prerelease_date=None, repo_name=None, frontport=True):
+def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, owner, repo_name=None, frontport=True):
 	assert bump_type in ['minor', 'major', 'patch', 'stable', 'prerelease']
 
 	repo_path = os.path.join(bench_path, 'apps', app)
@@ -94,12 +93,11 @@ def bump(gitlab, bench_path, app, bump_type, from_branch, to_branch, remote, own
 	click.confirm('Do you want to continue?', abort=True)
 
 	try:
-		new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch, prerelease=prerelease)
+		new_version = bump_repo(repo_path, bump_type, from_branch=from_branch, to_branch=to_branch)
 		commit_changes(repo_path, new_version, to_branch)
 		tag_name = create_release(repo_path, new_version, from_branch=from_branch, to_branch=to_branch, frontport=frontport)
 		push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
-		prerelease = True if 'beta' in new_version else False
-		create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name, prerelease=prerelease, prerelease_date=prerelease_date)
+		create_gitlab_release(gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name)
 		print(f'Released {tag_name} for {repo_path}')
 	except Exception as e:
 		print(e)
@@ -139,9 +137,9 @@ def get_release_message(repo_path, from_branch, to_branch, remote='upstream'):
 	if log:
 		return "* " + log.replace('\n', '\n* ')
 
-def bump_repo(repo_path, bump_type, from_branch, to_branch, prerelease):
+def bump_repo(repo_path, bump_type, from_branch, to_branch):
 	current_version = get_current_version(repo_path, to_branch)
-	new_version = get_bumped_version(current_version, bump_type, prerelease)
+	new_version = get_bumped_version(current_version, bump_type)
 
 	print('bumping version from', current_version, 'to', new_version)
 
@@ -313,13 +311,13 @@ def push_release(repo_path, from_branch, to_branch, remote='upstream'):
 	print(g.push(remote, *args))
 
 def create_gitlab_release(gitlab, repo_path, tag_name, message, remote='upstream', owner='frappe',
-		repo_name=None, prerelease=False, prerelease_date=None):
+		repo_name=None):
 
 	data = {
 		'tag_name': tag_name,
 		'name': 'Release ' + tag_name,
 		'description': message,
-		'released_at': datetime.datetime.strptime(prerelease_date, "%Y-%m-%d").isoformat() if prerelease and prerelease_date else None
+		'released_at': None
 	}
 
 	print('')
