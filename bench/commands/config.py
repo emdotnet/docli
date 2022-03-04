@@ -57,7 +57,7 @@ def set_common_config(configs):
 			value = value.title()
 		try:
 			value = ast.literal_eval(value)
-		except ValueError:
+		except (ValueError, SyntaxError):
 			pass
 
 		common_site_config[key] = value

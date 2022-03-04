@@ -379,8 +379,6 @@ def update(
 	else:
 		apps = []
 
-	validate_branch()
-
 	version_upgrade = is_version_upgrade()
 	handle_version_upgrade(version_upgrade, bench_path, force, reset, conf)
 
@@ -562,31 +560,31 @@ def check_app_installed_legacy(app, bench_path="."):
 				sys.exit(1)
 
 
-def validate_branch():
-	from bench.bench import Bench
-	from bench.utils.app import get_current_branch
+# def validate_branch():
+# 	from bench.bench import Bench
+# 	from bench.utils.app import get_current_branch
 
-	apps = Bench(".").apps
+# 	apps = Bench(".").apps
 
-	installed_apps = set(apps)
-	check_apps = set(["frappe", "erpnext"])
-	intersection_apps = installed_apps.intersection(check_apps)
+# 	installed_apps = set(apps)
+# 	check_apps = set(["frappe", "erpnext"])
+# 	intersection_apps = installed_apps.intersection(check_apps)
 
-	for app in intersection_apps:
-		branch = get_current_branch(app)
+# 	for app in intersection_apps:
+# 		branch = get_current_branch(app)
 
-		if branch == "master":
-			print(
-				"""'master' branch is renamed to 'version-11' since 'version-12' release.
-As of January 2020, the following branches are
-version		Frappe			ERPNext
-11		version-11		version-11
-12		version-12		version-12
-13		version-13		version-13
-14		develop			develop
+# 		if branch == "master":
+# 			print(
+# 				"""'master' branch is renamed to 'version-11' since 'version-12' release.
+# As of January 2020, the following branches are
+# version		Frappe			ERPNext
+# 11		version-11		version-11
+# 12		version-12		version-12
+# 13		version-13		version-13
+# 14		develop			develop
 
-Please switch to new branches to get future updates.
-To switch to your required branch, run the following commands: bench switch-to-branch [branch-name]"""
-			)
+# Please switch to new branches to get future updates.
+# To switch to your required branch, run the following commands: bench switch-to-branch [branch-name]"""
+# 			)
 
-			sys.exit(1)
+# 			sys.exit(1)
