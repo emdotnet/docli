@@ -96,7 +96,8 @@ def check_latest_version():
 		local_version = Version(VERSION)
 
 		if pypi_version > local_version:
-			log(f"A newer version of bench is available: {local_version} → {pypi_version}")
+			log(f"A newer version of dokos-cli is available: {local_version} → {pypi_version}")
+			log(f"You can update it with the following command: pip install dokos-cli --upgrade")
 
 
 def pause_exec(seconds=10):

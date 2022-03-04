@@ -73,9 +73,9 @@ def cli():
 		and not bench_config.get("developer_mode")
 	):
 		log(
-			"bench is installed in editable mode!\n\nThis is not the recommended mode"
+			"dokos-cli is installed in editable mode!\n\nThis is not the recommended mode"
 			" of installation for production. Instead, install the package from PyPI"
-			" with: `pip install frappe-bench`\n",
+			" with: `pip install dokos-cli`\n",
 			level=3,
 		)
 
