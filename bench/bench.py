@@ -332,8 +332,6 @@ class BenchSetup(Base):
 		if not apps:
 			apps = self.bench.get_installed_apps()
 
-		apps = self.__get_installed_apps()
-
 		self.pip()
 
 		print(f"Installing {len(apps)} applications...")
