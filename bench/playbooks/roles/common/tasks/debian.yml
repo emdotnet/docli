@@ -1,7 +1,7 @@
 ---
 
 - name: Setup OpenSSL dependancy
-  pip: name=pyOpenSSL version=21.0.0
+  pip: name=pyOpenSSL version=22.0.0
 
 - name: install pillow prerequisites for Debian < 8
   apt:
