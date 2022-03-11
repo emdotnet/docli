@@ -73,7 +73,7 @@ def init(
 
 	# remote apps
 	else:
-		frappe_path = frappe_path or "https://github.com/frappe/frappe.git"
+		frappe_path = frappe_path or "https://gitlab.com/dokos/dodock.git"
 
 		get_app(
 			frappe_path, branch=frappe_branch, bench_path=path, skip_assets=True, verbose=verbose
