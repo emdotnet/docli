@@ -137,9 +137,9 @@ class Bench(Base, Validator):
 		conf = self.conf
 		if conf.get("developer_mode"):
 			restart_process_manager(bench_path=self.name, web_workers=web)
-		elif supervisor or conf.get("restart_supervisor_on_update"):
+		elif supervisor and conf.get("restart_supervisor_on_update"):
 			restart_supervisor_processes(bench_path=self.name, web_workers=web)
-		elif systemd or conf.get("restart_systemd_on_update"):
+		elif systemd and conf.get("restart_systemd_on_update"):
 			restart_systemd_processes(bench_path=self.name, web_workers=web)
 
 	def get_installed_apps(self) -> List:

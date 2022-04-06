@@ -314,6 +314,7 @@ def get_app(
 	repo_name = app.repo
 	branch = app.tag
 	bench_setup = False
+	restart_bench = not init_bench
 
 	if not is_bench_directory(bench_path):
 		if not init_bench:
@@ -336,7 +337,6 @@ def get_app(
 			"is_parent": True,
 			"color": None,
 		})
-
 
 	cloned_path = os.path.join(bench_path, "apps", repo_name)
 	dir_already_exists = os.path.isdir(cloned_path)
@@ -362,7 +362,7 @@ def get_app(
 		or overwrite
 		or click.confirm("Do you want to reinstall the existing application?")
 	):
-		app.install(verbose=verbose, skip_assets=skip_assets)
+		app.install(verbose=verbose, skip_assets=skip_assets, restart_bench=restart_bench)
 
 
 def new_app(app, no_git=None, bench_path="."):
