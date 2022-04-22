@@ -12,6 +12,10 @@ from bench.exceptions import (
 from bench.app import get_repo_dir
 from functools import lru_cache
 
+repo_map = {
+	'dodock': 'frappe',
+	'dokos': 'erpnext'
+}
 
 def is_version_upgrade(app="frappe", bench_path=".", branch=None):
 	upstream_version = get_upstream_version(app=app, branch=branch, bench_path=bench_path)
@@ -210,6 +214,12 @@ def get_remote(app, bench_path="."):
 
 def get_app_name(bench_path, repo_name):
 	app_name = None
+
+	if repo_name in repo_map.keys():
+		repo_name = repo_map.get(repo_name)
+	else:
+		repo_name = repo_name.replace("-", "_")
+
 	apps_path = os.path.join(os.path.abspath(bench_path), "apps")
 	config_path = os.path.join(apps_path, repo_name, "setup.cfg")
 	if os.path.exists(config_path):
