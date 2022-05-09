@@ -2,6 +2,7 @@
 import os
 import logging
 import sys
+import re
 
 # imports - module imports
 import bench
@@ -55,7 +56,7 @@ def setup_production(user, bench_path='.', yes=False):
 
 	print("Setting Up symlinks and reloading services...")
 	if conf.get('restart_supervisor_on_update'):
-		supervisor_conf_extn = "ini" if is_centos7() else "conf"
+		supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
 		supervisor_conf = os.path.join(get_supervisor_confdir(), f'{bench_name}.{supervisor_conf_extn}')
 
 		# Check if symlink exists, If not then create it.
@@ -79,7 +80,7 @@ def disable_production(bench_path='.'):
 	conf = Bench(bench_path).conf
 
 	# supervisorctl
-	supervisor_conf_extn = "ini" if is_centos7() else "conf"
+	supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
 	supervisor_conf = os.path.join(get_supervisor_confdir(), f'{bench_name}.{supervisor_conf_extn}')
 
 	if os.path.islink(supervisor_conf):
@@ -133,8 +134,16 @@ def remove_default_nginx_configs():
 			os.unlink(conf_file)
 
 
-def is_centos7():
-	return os.path.exists('/etc/redhat-release') and get_cmd_output("cat /etc/redhat-release | sed 's/Linux\ //g' | cut -d' ' -f3 | cut -d. -f1").strip() == '7'
+def is_centos7_or_newer():
+	distro_release = '/etc/redhat-release'
+	if os.path.exists(distro_release):
+		with open(distro_release, 'r') as file_handle:
+			try:
+				result = re.search(r"(?:(\d+)\.)?(?:(\d+)\.)?(\*|\d+)", file_handle.read(), re.MULTILINE)
+				return int(result.group(1)) >= 7
+			except AttributeError:
+				pass
+	return False
 
 
 def is_running_systemd():
