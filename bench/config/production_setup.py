@@ -100,15 +100,21 @@ def disable_production(bench_path='.'):
 
 def service(service_name, service_option):
 	if os.path.basename(which('systemctl') or '') == 'systemctl' and is_running_systemd():
+		status = exec_cmd(f"sudo systemctl {service_option} {service_name}", _raise=False)
+		if service_option == "status":
+			return status == 0
 		if service_option == "reload":
-			if exec_cmd(f"sudo systemctl status {service_name}", _raise=False) == 0:
+			if status == 0:
 				exec_cmd(f"sudo systemctl {service_option} {service_name}")
 			else:
 				exec_cmd(f"sudo systemctl start {service_name}")
 
 	elif os.path.basename(which('service') or '') == 'service':
+		status = exec_cmd(f"sudo service {service_name} {service_option}", _raise=False)
+		if service_option == "status":
+			return status == 0
 		if service_option == "reload":
-			if exec_cmd(f"sudo service {service_name} {service_option}", _raise=False) == 0:
+			if status == 0:
 				exec_cmd(f"sudo service {service_name} {service_option}")
 			else:
 				exec_cmd(f"sudo service start {service_option}")
@@ -167,34 +173,35 @@ def is_running_systemd():
 def reload_supervisor():
 	supervisorctl = which('supervisorctl')
 
-	try:
-		# first try reread/update
-		exec_cmd(f'{supervisorctl} reread')
-		exec_cmd(f'{supervisorctl} update')
-		return
-	except CommandFailedError:
-		pass
+	if is_centos7_or_newer():
+		service_name = 'supervisord'
+	else:
+		service_name = 'supervisor'
+	status = service(service_name, 'status')
 
-	try:
-		# something is wrong, so try reloading
-		exec_cmd(f'{supervisorctl} reload')
-		return
-	except CommandFailedError:
-		pass
+	if status:
+		try:
+			# first try reread/update
+			exec_cmd(f'{supervisorctl} reread', _raise=False)
+			exec_cmd(f'{supervisorctl} update', _raise=False)
+			return
+		except CommandFailedError:
+			pass
 
-	try:
-		# then try restart for centos
-		service('supervisord', 'restart')
-		return
-	except CommandFailedError:
-		pass
+		try:
+			# something is wrong, so try reloading
+			exec_cmd(f'{supervisorctl} reload', _raise=False)
+			return
+		except CommandFailedError:
+			pass
 
-	try:
-		# else try restart for ubuntu / debian
-		service('supervisor', 'restart')
-		return
-	except CommandFailedError:
-		pass
+		try:
+			service(service_name, 'restart')
+			return
+		except CommandFailedError:
+			pass
+	else:
+		service(service_name, 'start')
 
 def reload_nginx():
 	try:
