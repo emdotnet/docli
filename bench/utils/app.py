@@ -10,6 +10,7 @@ from bench.exceptions import (
 	VersionNotFound,
 )
 from bench.app import get_repo_dir
+from bench.config.common_site_config import get_config
 from functools import lru_cache
 
 repo_map = {
@@ -215,10 +216,10 @@ def get_remote(app, bench_path="."):
 def get_app_name(bench_path, repo_name):
 	app_name = None
 
+	repo_map.update(get_config(bench_path).get('application_names_by_repository', {}))
+
 	if repo_name in repo_map.keys():
 		repo_name = repo_map.get(repo_name)
-	else:
-		repo_name = repo_name.replace("-", "_")
 
 	apps_path = os.path.join(os.path.abspath(bench_path), "apps")
 	config_path = os.path.join(apps_path, repo_name, "setup.cfg")
