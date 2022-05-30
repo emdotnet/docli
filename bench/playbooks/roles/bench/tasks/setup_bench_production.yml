@@ -1,15 +1,15 @@
 ---
-- name: Setup production
-  become: yes
-  become_user: root
-  command: bench setup production {{ frappe_user }} --yes
-  args:
-    chdir: '{{ bench_path }}'
-
 - name: Setup Sudoers
   become: yes
   become_user: root
   command: bench setup sudoers {{ frappe_user }}
+  args:
+    chdir: '{{ bench_path }}'
+
+- name: Setup production
+  become: yes
+  become_user: root
+  command: bench setup production {{ frappe_user }} --yes
   args:
     chdir: '{{ bench_path }}'
 
