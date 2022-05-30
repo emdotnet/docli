@@ -31,9 +31,11 @@ def setup_production_prerequisites():
 
 def setup_production(user, bench_path='.', yes=False):
 	print("Setting Up prerequisites...")
+	print("TEST SETUP")
 	setup_production_prerequisites()
 
 	conf = Bench(bench_path).conf
+	print("restart_supervisor_on_update", conf.get('restart_supervisor_on_update'))
 
 	if conf.get('restart_supervisor_on_update') and conf.get('restart_systemd_on_update'):
 		raise Exception("You cannot use supervisor and systemd at the same time. Modify your common_site_config accordingly." )
@@ -55,6 +57,7 @@ def setup_production(user, bench_path='.', yes=False):
 	nginx_conf = f'/etc/nginx/conf.d/{bench_name}.conf'
 
 	print("Setting Up symlinks and reloading services...")
+	print("restart_supervisor_on_update", conf.get('restart_supervisor_on_update'))
 	if conf.get('restart_supervisor_on_update'):
 		supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
 		supervisor_conf = os.path.join(get_supervisor_confdir(), f'{bench_name}.{supervisor_conf_extn}')
