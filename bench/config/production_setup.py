@@ -163,31 +163,29 @@ def reload_supervisor():
 		service_name = 'supervisord'
 	else:
 		service_name = 'supervisor'
-	status = service(service_name, 'status')
 
-	if status:
-		try:
-			# first try reread/update
-			exec_cmd(f'{supervisorctl} reread', _raise=False)
-			exec_cmd(f'{supervisorctl} update', _raise=False)
-			return
-		except CommandFailedError:
-			pass
+	try:
+		# first try reread/update
+		exec_cmd(f'{supervisorctl} reread')
+		exec_cmd(f'{supervisorctl} update')
+		return
+	except CommandFailedError:
+		pass
 
-		try:
-			# something is wrong, so try reloading
-			exec_cmd(f'{supervisorctl} reload', _raise=False)
-			return
-		except CommandFailedError:
-			pass
+	try:
+		# something is wrong, so try reloading
+		exec_cmd(f'{supervisorctl} reload')
+		return
+	except CommandFailedError:
+		pass
 
-		try:
-			service(service_name, 'restart')
-			return
-		except CommandFailedError:
-			pass
-	else:
-		service(service_name, 'start')
+	try:
+		service(service_name, 'restart')
+		return
+	except CommandFailedError:
+		pass
+
+
 
 def reload_nginx():
 	try:
