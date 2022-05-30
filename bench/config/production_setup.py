@@ -56,23 +56,27 @@ def setup_production(user, bench_path='.', yes=False):
 
 	print("Setting Up symlinks and reloading services...")
 	if conf.get('restart_supervisor_on_update'):
-		#supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
-		supervisor_conf = os.path.join(get_supervisor_confdir(), f'{bench_name}.conf')
+		supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
+		supervisor_conf = os.path.join(get_supervisor_confdir(), f'{bench_name}.{supervisor_conf_extn}')
+		print("supervisor_conf", supervisor_conf)
 
 		# Check if symlink exists, If not then create it.
 		if not os.path.islink(supervisor_conf):
+			print("Creating symlink")
 			os.symlink(os.path.abspath(os.path.join(bench_path, 'config', 'supervisor.conf')), supervisor_conf)
 
 	if not os.path.islink(nginx_conf):
 		os.symlink(os.path.abspath(os.path.join(bench_path, 'config', 'nginx.conf')), nginx_conf)
 
 	if conf.get('restart_supervisor_on_update'):
+		print("RELOAD SUPERVISOR")
 		reload_supervisor()
 
 	if os.environ.get('NO_SERVICE_RESTART'):
 		return
 
 	reload_nginx()
+	print("Production Setup")
 
 
 def disable_production(bench_path='.'):
