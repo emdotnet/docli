@@ -46,8 +46,6 @@ def setup_production(user, bench_path='.', yes=False):
 		update_supervisord_config(user=user, yes=yes)
 		generate_supervisor_config(bench_path=bench_path, user=user, yes=yes)
 
-	conf = Bench(bench_path).conf
-
 	print("Setting Up NGINX...")
 	make_nginx_conf(bench_path=bench_path, yes=yes)
 	fix_prod_setup_perms(bench_path, frappe_user=user)
