@@ -11,6 +11,6 @@
 {% if nginx %}
 {{ user }} ALL = (root) NOPASSWD: {{ nginx }}
 {% endif %}
-{{ user }} ALL = (root) NOPASSWD: /opt/certbot-auto
+{{ user }} ALL = (root) NOPASSWD: {{ certbot }}
 Defaults:{{ user }} !requiretty
 
