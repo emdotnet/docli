@@ -209,31 +209,31 @@ def get_remote(app, bench_path="."):
 		return contents.splitlines()[0].split()[0]
 
 
-def get_app_name(bench_path, repo_name):
+def get_app_name(bench_path, folder_name):
 	app_name = None
 
 	repo_map = get_config(bench_path).get('application_names_by_repository', {})
 
-	if repo_name in repo_map.keys():
-		repo_name = repo_map.get(repo_name)
+	if folder_name in repo_map.keys():
+		folder_name = repo_map.get(folder_name)
 
 	apps_path = os.path.join(os.path.abspath(bench_path), "apps")
-	config_path = os.path.join(apps_path, repo_name, "setup.cfg")
+	config_path = os.path.join(apps_path, folder_name, "setup.cfg")
 	if os.path.exists(config_path):
 		config = read_configuration(config_path)
 		app_name = config.get("metadata", {}).get("name")
 
 	if not app_name:
 		# retrieve app name from setup.py as fallback
-		app_path = os.path.join(apps_path, repo_name, "setup.py")
+		app_path = os.path.join(apps_path, folder_name, "setup.py")
 		with open(app_path, "rb") as f:
 			app_name = re.search(r'name\s*=\s*[\'"](.*)[\'"]', f.read().decode("utf-8")).group(1)
 
-	if app_name and repo_name != app_name:
-		os.rename(os.path.join(apps_path, repo_name), os.path.join(apps_path, app_name))
+	if app_name and folder_name != app_name:
+		os.rename(os.path.join(apps_path, folder_name), os.path.join(apps_path, app_name))
 		return app_name
 
-	return repo_name
+	return folder_name
 
 def check_existing_dir(bench_path, repo_name):
 	cloned_path = os.path.join(bench_path, "apps", repo_name)
