@@ -54,6 +54,8 @@ def setup_production(user, bench_path='.', yes=False):
 	bench_name = get_bench_name(bench_path)
 	nginx_conf = f'/etc/nginx/conf.d/{bench_name}.conf'
 
+	conf = Bench(bench_path).conf
+
 	print("Setting Up symlinks and reloading services...")
 	if conf.get('restart_supervisor_on_update'):
 		supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
