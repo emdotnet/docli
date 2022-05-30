@@ -13,10 +13,6 @@ from bench.app import get_repo_dir
 from bench.config.common_site_config import get_config
 from functools import lru_cache
 
-repo_map = {
-	'dodock': 'frappe',
-	'dokos': 'erpnext'
-}
 
 def is_version_upgrade(app="frappe", bench_path=".", branch=None):
 	upstream_version = get_upstream_version(app=app, branch=branch, bench_path=bench_path)
@@ -216,7 +212,7 @@ def get_remote(app, bench_path="."):
 def get_app_name(bench_path, repo_name):
 	app_name = None
 
-	repo_map.update(get_config(bench_path).get('application_names_by_repository', {}))
+	repo_map = get_config(bench_path).get('application_names_by_repository', {})
 
 	if repo_name in repo_map.keys():
 		repo_name = repo_map.get(repo_name)
