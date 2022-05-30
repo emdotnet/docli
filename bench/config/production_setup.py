@@ -100,24 +100,10 @@ def disable_production(bench_path='.'):
 
 def service(service_name, service_option):
 	if os.path.basename(which('systemctl') or '') == 'systemctl' and is_running_systemd():
-		status = exec_cmd(f"sudo systemctl {service_option} {service_name}", _raise=False)
-		if service_option == "status":
-			return status == 0
-		if service_option == "reload":
-			if status == 0:
-				exec_cmd(f"sudo systemctl {service_option} {service_name}")
-			else:
-				exec_cmd(f"sudo systemctl start {service_name}")
+		exec_cmd(f"sudo systemctl {service_option} {service_name}")
 
 	elif os.path.basename(which('service') or '') == 'service':
-		status = exec_cmd(f"sudo service {service_name} {service_option}", _raise=False)
-		if service_option == "status":
-			return status == 0
-		if service_option == "reload":
-			if status == 0:
-				exec_cmd(f"sudo service {service_name} {service_option}")
-			else:
-				exec_cmd(f"sudo service start {service_option}")
+		exec_cmd(f"sudo service {service_name} {service_option}")
 
 	else:
 		# look for 'service_manager' and 'service_manager_command' in environment
