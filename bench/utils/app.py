@@ -210,6 +210,8 @@ def get_remote(app, bench_path="."):
 
 
 def get_app_name(bench_path, repo_name):
+	dokos_repo_map = {"dodock": "frappe", "dokos": "erpnext"}
+
 	app_name = None
 
 	repo_map = get_config(bench_path).get('application_names_by_repository', {})
@@ -218,6 +220,9 @@ def get_app_name(bench_path, repo_name):
 		repo_name = repo_map.get(repo_name)
 
 	apps_path = os.path.join(os.path.abspath(bench_path), "apps")
+	if not os.path.exists(os.path.join(apps_path, repo_name)) and repo_name in dokos_repo_map:
+		repo_name = dokos_repo_map.get(repo_name)
+
 	config_path = os.path.join(apps_path, repo_name, "setup.cfg")
 	if os.path.exists(config_path):
 		config = read_configuration(config_path)
