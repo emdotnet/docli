@@ -10,6 +10,7 @@ import git
 # imports - module imports
 from bench.utils import exec_cmd
 from bench.release import get_bumped_version
+from bench.app import App
 from bench.tests.test_base import FRAPPE_BRANCH, TestBenchBase
 from bench.bench import Bench
 
@@ -35,16 +36,19 @@ class TestBenchInit(TestBenchBase):
 	def test_utils(self):
 		self.assertEqual(subprocess.call("bench"), 0)
 
-
 	def test_init(self, bench_name="test-bench", **kwargs):
 		self.init_bench(bench_name, **kwargs)
+		app = App("file:///tmp/frappe")
+		self.assertTupleEqual(
+            (app.mount_path, app.url, app.repo, app.org),
+            ("/tmp/frappe", "file:///tmp/frappe", "frappe", "frappe"),
+        )
 		self.assert_folders(bench_name)
 		self.assert_virtual_env(bench_name)
 		self.assert_config(bench_name)
 		test_bench = Bench(bench_name)
 		app = App("frappe", bench=test_bench)
 		self.assertEqual(app.from_apps, True)
-
 
 	def basic(self):
 		try:
