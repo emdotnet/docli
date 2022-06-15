@@ -58,14 +58,6 @@ def install_nginx(user=None):
 	if user:
 		setup_sudoers(user)
 
-@click.command('virtualbox', help="Installs supervisor")
-def install_virtualbox():
-	run_playbook('vm_build.yml', tag='virtualbox')
-
-@click.command('packer', help="Installs Oracle virtualbox and packer 1.2.1")
-def install_packer():
-	run_playbook('vm_build.yml', tag='packer')
-
 @click.command("fail2ban", help="Install fail2ban, an intrusion prevention software framework that protects computer servers from brute-force attacks")
 @click.option('--maxretry', default=6, help="Number of matches (i.e. value of the counter) which triggers ban action on the IP.")
 @click.option('--bantime', default=600, help="The counter is set to zero if no match is found within 'findtime' seconds.")
