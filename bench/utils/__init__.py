@@ -428,6 +428,13 @@ def find_org(org_repo):
 		if res.ok:
 			return org, org_repo
 
+	if org == "dodock":
+		return "dodock", "https://gitlab.com/dokos/dodock"
+
+	if org == "dokos":
+		return "dokos", "https://gitlab.com/dokos/dokos"
+
+
 	raise InvalidRemoteException(f"{org_repo} not found in frappe or erpnext")
 
 

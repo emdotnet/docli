@@ -433,8 +433,8 @@ def update(
 
 	print(
 		"_" * 80
-		+ "\nBench: Deployment tool for Frappe and Frappe Applications"
-		" (https://frappe.io/bench).\nOpen source depends on your contributions, so do"
+		+ "\nBench: Deployment tool for Dokos and Dodock Applications"
+		" (https://gitlab.com/dokos/bench).\nOpen source depends on your contributions, so do"
 		" give back by submitting bug reports, patches and fixes and be a part of the"
 		" community :)"
 	)
