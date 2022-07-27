@@ -163,7 +163,7 @@ def which(executable: str, raise_err: bool = False) -> str:
 	return exec_
 
 
-def setup_logging(bench_path=".") -> "logger":
+def setup_logging(bench_path=".") -> logging.Logger:
 	LOG_LEVEL = 15
 	logging.addLevelName(LOG_LEVEL, "LOG")
 
@@ -534,13 +534,39 @@ class _dict(dict):
 		return _dict(dict(self).copy())
 
 
-def parse_sys_argv():
-	sys_argv = _dict(options=set(), commands=set())
+def get_cmd_from_sysargv():
+	"""Identify and segregate tokens to options and command
+	For Command: `bench --profile --site frappeframework.com migrate --no-backup`
+	sys.argv: ["/home/frappe/.local/bin/bench", "--profile", "--site", "frappeframework.com", "migrate", "--no-backup"]
+	Actual command run: migrate
+	"""
+	# context is passed as options to frappe's bench_helper
+	from bench.bench import Bench
+	frappe_context = _dict(
+		params={"--site"},
+		flags={"--verbose", "--profile", "--force"}
+	)
+	cmd_from_ctx = None
+	sys_argv = sys.argv[1:]
+	skip_next = False
 
-	for c in sys.argv[1:]:
-		if c.startswith("-"):
-			sys_argv.options.add(c)
-		else:
-			sys_argv.commands.add(c)
+	for arg in sys_argv:
+		if skip_next:
+			skip_next = False
+			continue
 
-	return sys_argv
+		if arg in frappe_context.flags:
+			continue
+
+		elif arg in frappe_context.params:
+			skip_next = True
+			continue
+
+		if sys_argv.index(arg) == 0 and arg in Bench(".").apps:
+			continue
+
+		cmd_from_ctx = arg
+
+		break
+
+	return cmd_from_ctx
