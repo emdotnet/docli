@@ -35,11 +35,12 @@ from bench.utils.bench import get_env_cmd
 dynamic_feed = False
 verbose = False
 is_envvar_warn_set = None
-from_command_line = False # set when commands are executed via the CLI
+from_command_line = False  # set when commands are executed via the CLI
 bench.LOG_BUFFER = []
 
 change_uid_msg = "You should not run this command as root"
 src = os.path.dirname(__file__)
+
 
 @contextmanager
 def execute_cmd(check_for_update=True, command: str = None, logger: Logger = None):
@@ -58,6 +59,7 @@ def execute_cmd(check_for_update=True, command: str = None, logger: Logger = Non
 			logger.warning(f"{command} executed with exit code {return_code}")
 
 		raise e
+
 
 def cli():
 	global from_command_line, bench_config, is_envvar_warn_set, verbose
@@ -102,7 +104,9 @@ def cli():
 	if (
 		not in_bench
 		and len(sys.argv) > 1
-		and not argv.intersection({"init", "find", "src", "drop", "get", "get-app", "--version"})
+		and not argv.intersection(
+			{"init", "find", "src", "drop", "get", "get-app", "--version"}
+		)
 		and not cmd_requires_root()
 	):
 		log("Command not being executed in bench directory", level=3)
@@ -199,7 +203,7 @@ def frappe_cmd(bench_path="."):
 
 def get_cached_frappe_commands():
 	if os.path.exists(bench_cache_file):
-		command_dump = open(bench_cache_file, "r").read() or "[]"
+		command_dump = open(bench_cache_file).read() or "[]"
 		return set(json.loads(command_dump))
 	return set()
 
@@ -236,6 +240,7 @@ def change_working_directory():
 
 def setup_clear_cache():
 	from copy import copy
+
 	f = copy(os.chdir)
 
 	def _chdir(*args, **kwargs):

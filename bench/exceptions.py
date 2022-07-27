@@ -37,5 +37,6 @@ class FeatureDoesNotExistError(CommandFailedError):
 class NotInBenchDirectoryError(Exception):
 	pass
 
+
 class VersionNotFound(Exception):
 	pass

@@ -1,4 +1,5 @@
 # imports - standard imports
+import contextlib
 import json
 import logging
 import os
@@ -6,25 +7,15 @@ import re
 import subprocess
 import sys
 from json.decoder import JSONDecodeError
-import typing
 
 # imports - third party imports
 import click
-import bench
 
 # imports - module imports
-from bench.utils import (
-	which,
-	log,
-	exec_cmd,
-	get_bench_name,
-	get_cmd_output,
-)
+import bench
 from bench.exceptions import PatchError, ValidationError
+from bench.utils import exec_cmd, get_bench_name, get_cmd_output, log, which
 
-
-if typing.TYPE_CHECKING:
-	from bench.bench import Bench
 
 logger = logging.getLogger(bench.PROJECT_NAME)
 
@@ -41,6 +32,7 @@ def get_virtualenv_path(verbose=False):
 
 	return virtualenv_path
 
+
 def get_venv_path(verbose=False):
 	current_python = sys.executable
 	with open(os.devnull, "wb") as devnull:
@@ -52,10 +44,12 @@ def get_venv_path(verbose=False):
 	else:
 		log("virtualenv cannot be found", level=2)
 
+
 def update_node_packages(bench_path=".", apps=None):
 	print("Updating node packages...")
-	from bench.utils.app import get_develop_version
 	from distutils.version import LooseVersion
+
+	from bench.utils.app import get_develop_version
 
 	v = LooseVersion(get_develop_version("frappe", bench_path=bench_path))
 
@@ -90,10 +84,15 @@ def install_python_dev_dependencies(bench_path=".", apps=None, verbose=False):
 		if os.path.exists(pyproject_path):
 			pyproject_deps = _generate_dev_deps_pattern(pyproject_path)
 			if pyproject_deps:
-				bench.run(f"{bench.python} -m pip install {quiet_flag} --upgrade {pyproject_deps}")
+				bench.run(
+					f"{bench.python} -m pip install {quiet_flag} --upgrade -r {dev_requirements_path}"
+				)
 
 		if not pyproject_deps and os.path.exists(dev_requirements_path):
-			bench.run(f"{bench.python} -m pip install {quiet_flag} --upgrade -r {dev_requirements_path}")
+			bench.run(
+				f"{bench.python} -m pip install {quiet_flag} --upgrade -r {dev_requirements_path}"
+			)
+
 
 def _generate_dev_deps_pattern(pyproject_path):
 	try:
@@ -104,21 +103,18 @@ def _generate_dev_deps_pattern(pyproject_path):
 	requirements_pattern = ""
 	pyroject_config = loads(open(pyproject_path).read())
 
-	try:
-		for pkg, version in pyroject_config['tool']['bench']['dev-dependencies'].items():
+	with contextlib.suppress(KeyError):
+		for pkg, version in pyroject_config["tool"]["bench"]["dev-dependencies"].items():
 			op = "==" if "=" not in version else ""
 			requirements_pattern += f"{pkg}{op}{version} "
-	except KeyError:
-		pass
 	return requirements_pattern
+
 
 def update_yarn_packages(bench_path=".", apps=None):
 	from bench.bench import Bench
 
 	bench = Bench(bench_path)
-
 	apps = apps or bench.apps
-
 	apps_dir = os.path.join(bench.name, "apps")
 
 	# TODO: Check for stuff like this early on only??
@@ -145,7 +141,7 @@ def update_npm_packages(bench_path=".", apps=None):
 		package_json_path = os.path.join(apps_dir, app, "package.json")
 
 		if os.path.exists(package_json_path):
-			with open(package_json_path, "r") as f:
+			with open(package_json_path) as f:
 				app_package_json = json.loads(f.read())
 				# package.json is usually a dict in a dict
 				for key, value in app_package_json.items():
@@ -160,7 +156,7 @@ def update_npm_packages(bench_path=".", apps=None):
 							package_json[key] = value
 
 	if package_json is {}:
-		with open(os.path.join(os.path.dirname(__file__), "package.json"), "r") as f:
+		with open(os.path.join(os.path.dirname(__file__), "package.json")) as f:
 			package_json = json.loads(f.read())
 
 	with open(os.path.join(bench_path, "package.json"), "w") as f:
@@ -227,16 +223,15 @@ def migrate_env(python, backup=False):
 
 
 def validate_upgrade(from_ver, to_ver, bench_path="."):
-	if to_ver >= 6:
-		if not which("npm") and not (which("node") or which("nodejs")):
-			raise Exception("Please install nodejs and npm")
+	if to_ver >= 6 and not which("npm") and not which("node") and not which("nodejs"):
+		raise Exception("Please install nodejs and npm")
 
 
 def post_upgrade(from_ver, to_ver, bench_path="."):
-	from bench.config import redis
-	from bench.config.supervisor import generate_supervisor_config
-	from bench.config.nginx import make_nginx_conf
 	from bench.bench import Bench
+	from bench.config import redis
+	from bench.config.nginx import make_nginx_conf
+	from bench.config.supervisor import generate_supervisor_config
 
 	conf = Bench(bench_path).conf
 	print("-" * 80 + f"Your bench was upgraded to version {to_ver}")
@@ -319,9 +314,7 @@ def restart_systemd_processes(bench_path=".", web_workers=False):
 
 def restart_process_manager(bench_path=".", web_workers=False):
 	# only overmind has the restart feature, not sure other supported procmans do
-	if which("overmind") and os.path.exists(
-		os.path.join(bench_path, ".overmind.sock")
-	):
+	if which("overmind") and os.path.exists(os.path.join(bench_path, ".overmind.sock")):
 		worker = "web" if web_workers else ""
 		exec_cmd(f"overmind restart {worker}", cwd=bench_path)
 
@@ -334,7 +327,7 @@ def build_assets(bench_path=".", app=None):
 
 
 def handle_version_upgrade(version_upgrade, bench_path, force, reset, conf):
-	from bench.utils import pause_exec, log
+	from bench.utils import log, pause_exec
 
 	if version_upgrade[0]:
 		if force:
@@ -382,13 +375,12 @@ def update(
 ):
 	"""command: bench update"""
 	import re
-	from bench import patches
 
+	from bench import patches
 	from bench.app import pull_apps
 	from bench.bench import Bench
 	from bench.config.common_site_config import update_config
 	from bench.exceptions import CannotUpdateReleaseBench
-
 	from bench.utils import clear_command_cache
 	from bench.utils.app import is_version_upgrade
 	from bench.utils.system import backup_all_sites
@@ -453,8 +445,7 @@ def update(
 	update_config(conf, bench_path=bench_path)
 
 	print(
-		"_" * 80
-		+ "\nBench: Deployment tool for Dokos and Dodock Applications"
+		"_" * 80 + "\nBench: Deployment tool for Dokos and Dodock Applications"
 		" (https://gitlab.com/dokos/bench).\nOpen source depends on your contributions, so do"
 		" give back by submitting bug reports, patches and fixes and be a part of the"
 		" community :)"
@@ -494,7 +485,7 @@ def clone_apps_from(bench_path, clone_from, update_app=True):
 
 		install_app(app, bench_path, restart_bench=False)
 
-	with open(os.path.join(clone_from, "sites", "apps.txt"), "r") as f:
+	with open(os.path.join(clone_from, "sites", "apps.txt")) as f:
 		apps = f.read().splitlines()
 
 	for app in apps:
@@ -537,7 +528,7 @@ def update_common_site_config(ddict, bench_path="."):
 	filename = os.path.join(bench_path, "sites", "common_site_config.json")
 
 	if os.path.exists(filename):
-		with open(filename, "r") as f:
+		with open(filename) as f:
 			content = json.load(f)
 
 	else:

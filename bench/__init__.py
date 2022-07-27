@@ -5,6 +5,7 @@ current_path = None
 updated_path = None
 LOG_BUFFER = []
 
+
 def set_frappe_version(bench_path="."):
 	from .utils.app import get_current_frappe_version
 

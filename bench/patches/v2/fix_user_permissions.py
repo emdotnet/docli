@@ -5,7 +5,11 @@ import subprocess
 
 # imports - module imports
 from bench.cli import change_uid_msg
-from bench.config.production_setup import get_supervisor_confdir, is_centos7_or_newer, service
+from bench.config.production_setup import (
+	get_supervisor_confdir,
+	is_centos7_or_newer,
+	service,
+)
 from bench.config.common_site_config import get_config
 from bench.utils import exec_cmd, get_bench_name, get_cmd_output
 
@@ -34,13 +38,13 @@ def is_production_set(bench_path):
 	bench_name = get_bench_name(bench_path)
 
 	supervisor_conf_extn = "ini" if is_centos7_or_newer() else "conf"
-	supervisor_conf_file_name = f'{bench_name}.{supervisor_conf_extn}'
+	supervisor_conf_file_name = f"{bench_name}.{supervisor_conf_extn}"
 	supervisor_conf = os.path.join(get_supervisor_confdir(), supervisor_conf_file_name)
 
 	if os.path.exists(supervisor_conf):
 		production_setup = production_setup or True
 
-	nginx_conf = f'/etc/nginx/conf.d/{bench_name}.conf'
+	nginx_conf = f"/etc/nginx/conf.d/{bench_name}.conf"
 
 	if os.path.exists(nginx_conf):
 		production_setup = production_setup or True
@@ -50,7 +54,7 @@ def is_production_set(bench_path):
 
 def execute(bench_path):
 	"""This patch checks if bench sudoers is set and regenerate supervisor and sudoers files"""
-	user = get_config('.').get("frappe_user") or getpass.getuser()
+	user = get_config(".").get("frappe_user") or getpass.getuser()
 
 	if is_sudoers_set():
 		if is_production_set(bench_path):

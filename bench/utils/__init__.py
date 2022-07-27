@@ -12,7 +12,6 @@ from functools import lru_cache
 
 # imports - third party imports
 import click
-import requests
 
 # imports - module imports
 from bench import PROJECT_NAME, VERSION
@@ -25,6 +24,7 @@ bench_cache_file = ".bench.cmd"
 paths_in_app = ("hooks.py", "modules.txt", "patches.txt")
 paths_in_bench = ("apps", "sites", "config", "logs", "config/pids")
 sudoers_file = "/etc/sudoers.d/frappe"
+UNSET_ARG = object()
 
 
 def is_bench_directory(directory=os.path.curdir):
@@ -49,8 +49,9 @@ def is_frappe_app(directory: str) -> bool:
 
 	return bool(is_frappe_app)
 
+
 @lru_cache(maxsize=None)
-def is_valid_frappe_branch(frappe_path:str, frappe_branch:str):
+def is_valid_frappe_branch(frappe_path: str, frappe_branch: str):
 	"""Check if a branch exists in a repo. Throws InvalidRemoteException if branch is not found
 	Uses native git command to check for branches on a remote.
 	:param frappe_path: git url
@@ -121,7 +122,7 @@ def check_latest_version():
 
 		if pypi_version > local_version:
 			log(f"A newer version of dokos-cli is available: {local_version} → {pypi_version}")
-			log(f"You can update it with the following command: pip install dokos-cli --upgrade")
+			log("You can update it with the following command: pip install dokos-cli --upgrade")
 
 
 def pause_exec(seconds=10):
@@ -207,7 +208,9 @@ def get_git_version() -> float:
 def get_cmd_output(cmd, cwd=".", _raise=True):
 	output = ""
 	try:
-		output = subprocess.check_output(cmd, cwd=cwd, shell=True, stderr=subprocess.PIPE, encoding="utf-8").strip()
+		output = subprocess.check_output(
+			cmd, cwd=cwd, shell=True, stderr=subprocess.PIPE, encoding="utf-8"
+		).strip()
 	except subprocess.CalledProcessError as e:
 		if e.output:
 			output = e.output
@@ -434,7 +437,6 @@ def find_org(org_repo):
 	if org_repo == "dokos":
 		return "dokos", "dokos"
 
-
 	raise InvalidRemoteException(f"{org_repo} not found in frappe or erpnext")
 
 
@@ -513,6 +515,7 @@ def get_traceback() -> str:
 
 class _dict(dict):
 	"""dict like object that exposes keys as attributes"""
+
 	# bench port of frappe._dict
 	def __getattr__(self, key):
 		ret = self.get(key)
@@ -520,16 +523,21 @@ class _dict(dict):
 		if not ret and key.startswith("__") and key != "__deepcopy__":
 			raise AttributeError()
 		return ret
+
 	def __setattr__(self, key, value):
 		self[key] = value
+
 	def __getstate__(self):
 		return self
+
 	def __setstate__(self, d):
 		self.update(d)
+
 	def update(self, d):
 		"""update and return self -- the missing dict feature in python"""
-		super(_dict, self).update(d)
+		super().update(d)
 		return self
+
 	def copy(self):
 		return _dict(dict(self).copy())
 
@@ -542,10 +550,8 @@ def get_cmd_from_sysargv():
 	"""
 	# context is passed as options to frappe's bench_helper
 	from bench.bench import Bench
-	frappe_context = _dict(
-		params={"--site"},
-		flags={"--verbose", "--profile", "--force"}
-	)
+
+	frappe_context = _dict(params={"--site"}, flags={"--verbose", "--profile", "--force"})
 	cmd_from_ctx = None
 	sys_argv = sys.argv[1:]
 	skip_next = False
