@@ -83,9 +83,7 @@ def install_python_dev_dependencies(bench_path=".", apps=None, verbose=False):
 		if os.path.exists(pyproject_path):
 			pyproject_deps = _generate_dev_deps_pattern(pyproject_path)
 			if pyproject_deps:
-				bench.run(
-					f"{bench.python} -m pip install {quiet_flag} --upgrade -r {dev_requirements_path}"
-				)
+				bench.run(f"{bench.python} -m pip install {quiet_flag} --upgrade {pyproject_deps}")
 
 		if not pyproject_deps and os.path.exists(dev_requirements_path):
 			bench.run(
