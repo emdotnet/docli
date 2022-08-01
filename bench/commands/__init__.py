@@ -73,7 +73,6 @@ bench_command.add_command(switch_to_develop)
 
 from bench.commands.utils import (
 	backup_all_sites,
-	backup_site,
 	bench_src,
 	clear_command_cache,
 	disable_production,
@@ -106,7 +105,6 @@ bench_command.add_command(set_redis_cache_host)
 bench_command.add_command(set_redis_queue_host)
 bench_command.add_command(set_redis_socketio_host)
 bench_command.add_command(download_translations)
-bench_command.add_command(backup_site)
 bench_command.add_command(backup_all_sites)
 bench_command.add_command(release)
 bench_command.add_command(renew_lets_encrypt)
