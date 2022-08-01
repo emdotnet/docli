@@ -1,4 +1,5 @@
 # imports - standard imports
+import contextlib
 import os
 import logging
 import sys
@@ -193,32 +194,22 @@ def reload_supervisor():
 	else:
 		service_name = "supervisor"
 
-	try:
+	with contextlib.suppress(CommandFailedError):
 		# first try reread/update
 		exec_cmd(f"{supervisorctl} reread")
 		exec_cmd(f"{supervisorctl} update")
 		return
-	except CommandFailedError:
-		pass
 
-	try:
+	with contextlib.suppress(CommandFailedError):
 		# something is wrong, so try reloading
 		exec_cmd(f"{supervisorctl} reload")
 		return
-	except CommandFailedError:
-		pass
 
-	try:
+	with contextlib.suppress(CommandFailedError):
 		service(service_name, "restart")
 		return
-	except CommandFailedError:
-		pass
 
 
 def reload_nginx():
-	try:
-		exec_cmd(f"sudo {which('nginx')} -t")
-	except Exception:
-		raise
-
+	exec_cmd(f"sudo {which('nginx')} -t")
 	service("nginx", "reload")
