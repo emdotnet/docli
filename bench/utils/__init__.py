@@ -59,9 +59,10 @@ def is_valid_frappe_branch(frappe_path: str, frappe_branch: str):
 	:type frappe_branch: str
 	:raises InvalidRemoteException: branch for this repo doesn't exist
 	"""
-	import git
+	from git.cmd import Git
+	from git.exc import GitCommandError
 
-	g = git.cmd.Git()
+	g = Git()
 
 	if frappe_branch:
 		try:
@@ -70,8 +71,8 @@ def is_valid_frappe_branch(frappe_path: str, frappe_branch: str):
 				raise InvalidRemoteException(
 					f"Invalid branch or tag: {frappe_branch} for the remote {frappe_path}"
 				)
-		except git.exc.GitCommandError:
-			raise InvalidRemoteException(f"Invalid frappe path: {frappe_path}")
+		except GitCommandError as e:
+			raise InvalidRemoteException(f"Invalid frappe path: {frappe_path}") from e
 
 
 def log(message, level=0, no_log=False):
