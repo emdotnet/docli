@@ -75,7 +75,7 @@ def is_valid_frappe_branch(frappe_path: str, frappe_branch: str):
 			raise InvalidRemoteException(f"Invalid frappe path: {frappe_path}") from e
 
 
-def log(message, level=0, no_log=False):
+def log(message, level=0, no_log=False, stderr=False):
 	import bench
 	import bench.cli
 
@@ -92,13 +92,13 @@ def log(message, level=0, no_log=False):
 		bench.LOG_BUFFER.append({"prefix": prefix, "message": message, "color": color})
 
 	if no_log:
-		click.secho(message, fg=color)
+		click.secho(message, fg=color, err=stderr)
 	else:
 		loggers = {2: logger.error, 3: logger.warning}
 		level_logger = loggers.get(level, logger.info)
 
 		level_logger(message)
-		click.secho(f"{prefix}: {message}", fg=color)
+		click.secho(f"{prefix}: {message}", fg=color, err=stderr)
 
 
 def check_latest_version():
@@ -121,8 +121,14 @@ def check_latest_version():
 		local_version = Version(VERSION)
 
 		if pypi_version > local_version:
-			log(f"A newer version of dokos-cli is available: {local_version} → {pypi_version}")
-			log("You can update it with the following command: pip install dokos-cli --upgrade")
+			log(
+				f"A newer version of dokos-cli is available: {local_version} → {pypi_version}",
+				stderr=True,
+			)
+			log(
+				"You can update it with the following command: pip install dokos-cli --upgrade",
+				stderr=True,
+			)
 
 
 def pause_exec(seconds=10):
