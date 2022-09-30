@@ -86,10 +86,8 @@ def check_system_package_managers():
 def check_distribution_compatibility():
 	dist_name, dist_version = get_distribution_info()
 	supported_dists = {
-		"macos": [10.9, 10.10, 10.11, 10.12],
-		"ubuntu": [20],
-		"debian": [10],
-		"centos": [7],
+		"ubuntu": [22],
+		"debian": [11],
 	}
 
 	log("Checking System Compatibility...")
@@ -249,7 +247,7 @@ def install_bench(args):
 	# Python executable
 	dist_name, dist_version = get_distribution_info()
 	if dist_name == "centos":
-		args.python = "python3.7"
+		args.python = "python3.10"
 	else:
 		args.python = "python3"
 
@@ -272,8 +270,8 @@ def install_bench(args):
 	if args.production:
 		extra_vars.update(max_worker_connections=multiprocessing.cpu_count() * 1024)
 
-	frappe_branch = "master"
-	erpnext_branch = "master"
+	frappe_branch = "v3.x.x"
+	erpnext_branch = "v3.x.x"
 
 	if args.frappe_branch:
 		frappe_branch = args.frappe_branch
@@ -534,7 +532,7 @@ def parse_commandline_args():
 	parser.add_argument(
 		"--dodock-branch",
 		dest="frappe_branch",
-		default="master",
+		default="v3.x.x",
 		action="store",
 		help="Clone a particular branch of dodock",
 	)
@@ -550,7 +548,7 @@ def parse_commandline_args():
 	parser.add_argument(
 		"--dokos-branch",
 		dest="erpnext_branch",
-		default="master",
+		default="v3.x.x",
 		action="store",
 		help="Clone a particular branch of dokos",
 	)
