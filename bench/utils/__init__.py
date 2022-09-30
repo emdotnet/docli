@@ -411,6 +411,18 @@ def find_org(org_repo):
 	import requests
 
 	org_repo = org_repo[0]
+	if org_repo == "dodock":
+		return "dokos", "dodock"
+
+	if org_repo == "dokos":
+		return "dokos", "dokos"
+
+	try:
+		res = requests.head(f"https://gitlab.com/dokos/{org_repo}")
+		if res.ok:
+			return "dokos", org_repo
+	except Exception:
+		pass
 
 	for org in ["frappe", "erpnext"]:
 		res = requests.head(f"https://api.github.com/repos/{org}/{org_repo}")
@@ -418,12 +430,6 @@ def find_org(org_repo):
 			res = requests.head(f"https://github.com/{org}/{org_repo}")
 		if res.ok:
 			return org, org_repo
-
-	if org_repo == "dodock":
-		return "dodock", "dodock"
-
-	if org_repo == "dokos":
-		return "dokos", "dokos"
 
 	raise InvalidRemoteException(f"{org_repo} not found in frappe or erpnext")
 
