@@ -249,7 +249,7 @@ def install_bench(args):
 	if dist_name == "centos":
 		args.python = "python3.10"
 	else:
-		args.python = "python3"
+		args.python = "python3.10"
 
 	# create user if not exists
 	extra_vars = vars(args)
