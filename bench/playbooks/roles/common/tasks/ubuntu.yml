@@ -11,7 +11,7 @@
     force: yes
   when: ansible_distribution_version is version_compare('14.04', 'ge')
 
-- name: install pdf prerequisites for Ubuntu >= 18.04
+- name: install pdf prerequisites for Ubuntu 20.04
   apt:
     pkg:
       - libssl1.1

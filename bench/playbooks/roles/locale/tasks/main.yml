@@ -10,7 +10,7 @@
 
 - name: Set keymap
   command: "localectl set-keymap {{ locale_keymap }}"
-  when: "(ansible_distribution == 'Centos' or ansible_distribution == 'Ubuntu') and locale_test.stdout.find('Keymap:locale_keymap') == -1"
+  when: "(ansible_distribution == 'Centos' or (ansible_distribution == 'Ubuntu' and ansible_distribution_version == "20")) and locale_test.stdout.find('Keymap:locale_keymap') == -1"
 
 - name: Set Locale as en_US
   lineinfile: dest=/etc/environment backup=yes line="{{ item }}"
