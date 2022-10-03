@@ -18,7 +18,7 @@
       - mariadb-server
       - mariadb-client
       - mariadb-common
-      - libmariadbclient18
+      - libmariadb3
       - python3-mysqldb
     update_cache: yes
     state: present
