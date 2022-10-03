@@ -23,7 +23,7 @@ None
 MariaDB version:
 
 ```
-mariadb_version: 10.2
+mariadb_version: 10.6
 ```
 
 Configuration template:

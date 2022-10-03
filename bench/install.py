@@ -605,7 +605,7 @@ def parse_commandline_args():
 	parser.add_argument(
 		"--mariadb-version",
 		dest="mariadb_version",
-		default="10.4",
+		default="10.6",
 		help="Specify mariadb version",
 	)
 	parser.add_argument(

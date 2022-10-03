@@ -146,10 +146,9 @@ def backup_all_sites():
 @click.argument(
 	"bump-type", type=click.Choice(["major", "minor", "patch", "stable", "prerelease"])
 )
-@click.option("--from-branch", default="develop")
-@click.option("--to-branch", default="master")
+@click.option("--from-branch", default="v3.x.x-hotfix")
+@click.option("--to-branch", default="v3.x.x")
 @click.option("--remote", default="upstream")
-@click.option("--owner", default="frappe")
 @click.option("--repo-name")
 @click.option(
 	"--dont-frontport",
@@ -158,7 +157,7 @@ def backup_all_sites():
 	help="Front port fixes to new branches, example merging hotfix(v10) into staging-fixes(v11)",
 )
 def release(
-	app, bump_type, from_branch, to_branch, owner, repo_name, remote, dont_frontport
+	app, bump_type, from_branch, to_branch,repo_name, remote, dont_frontport
 ):
 	from bench.release import release
 
@@ -170,7 +169,6 @@ def release(
 		from_branch=from_branch,
 		to_branch=to_branch,
 		remote=remote,
-		owner=owner,
 		repo_name=repo_name,
 		frontport=frontport,
 	)
