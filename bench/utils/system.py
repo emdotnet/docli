@@ -128,7 +128,7 @@ def setup_sudoers(user):
 			"service": which("service"),
 			"systemctl": which("systemctl"),
 			"nginx": which("nginx"),
-			"certbot": get_certbot_path(),
+			"certbot": get_certbot_path(raise_err=False),
 		}
 	)
 
