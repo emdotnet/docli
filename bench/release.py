@@ -12,11 +12,11 @@ from .config.common_site_config import get_config
 import click
 import gitlab
 
-app_map = {"frappe": "dodock", "erpnext": "dokos"}
+app_map = {"frappe": "dodock", "erpnext": "dokos", "dokos_cloud": "dokos-cloud"}
 
-branches_to_update = {"develop": [], "staging": [], "hotfix": []}
+branches_to_update = {"develop": ["v3.x.x-hotfix"], "hotfix": ["staging", "develop"], "v3.x.x-hotfix": ["develop"]}
 
-releasable_branches = ["master"]
+releasable_branches = ["master", "v3.x.x"]
 
 
 def release(
@@ -26,9 +26,6 @@ def release(
 	from_branch,
 	to_branch,
 	remote="upstream",
-	owner="dokos",
-	prerelease=False,
-	prerelease_date=None,
 	repo_name=None,
 	frontport=True,
 ):
@@ -59,7 +56,6 @@ def release(
 			bump_type,
 			from_branch=from_branch,
 			to_branch=to_branch,
-			owner=owner,
 			repo_name=repo_name,
 			remote=remote,
 			frontport=frontport,
@@ -95,19 +91,20 @@ def bump(
 	from_branch,
 	to_branch,
 	remote,
-	owner,
 	repo_name=None,
 	frontport=True,
 ):
 	assert bump_type in ["minor", "major", "patch", "stable", "prerelease"]
 
 	repo_path = os.path.join(bench_path, "apps", app)
-	push_branch_for_old_major_version(
-		bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner
-	)
+
+	current_version = get_current_version(repo_path, to_branch)
+	click.confirm(f"Current version is {current_version}. Do you confirm ?", abort=True)
+
 	update_branches_and_check_for_changelog(
 		repo_path, from_branch, to_branch, remote=remote
 	)
+	print("Branches updated")
 	message = get_release_message(
 		repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote
 	)
@@ -136,7 +133,7 @@ def bump(
 		)
 		push_release(repo_path, from_branch=from_branch, to_branch=to_branch, remote=remote)
 		create_gitlab_release(
-			gitlab, repo_path, tag_name, message, remote=remote, owner=owner, repo_name=repo_name
+			gitlab, repo_path, tag_name, message, remote=remote, repo_name=repo_name
 		)
 		print(f"Released {tag_name} for {repo_path}")
 	except Exception as e:
@@ -270,21 +267,6 @@ def set_version(repo_path, version, to_branch):
 			"staging_version",
 		)
 
-	# TODO fix this
-	# set_setuppy_version(repo_path, version)
-	# set_versionpy_version(repo_path, version)
-	# set_hooks_version(repo_path, version)
-
-
-# def set_setuppy_version(repo_path, version):
-# 	set_filename_version(os.path.join(repo_path, 'setup.py'), version, 'version')
-#
-# def set_versionpy_version(repo_path, version):
-# 	set_filename_version(os.path.join(repo_path, os.path.basename(repo_path),'__version__.py'), version, '__version__')
-#
-# def set_hooks_version(repo_path, version):
-# 	set_filename_version(os.path.join(repo_path, os.path.basename(repo_path),'hooks.py'), version, 'app_version')
-
 
 def set_filename_version(filename, version_number, pattern):
 	changed = []
@@ -379,7 +361,7 @@ def push_release(repo_path, from_branch, to_branch, remote="upstream"):
 
 
 def create_gitlab_release(
-	gitlab, repo_path, tag_name, message, remote="upstream", owner="frappe", repo_name=None
+	gitlab, repo_path, tag_name, message, remote="upstream", repo_name=None
 ):
 
 	data = {
@@ -399,7 +381,7 @@ def create_gitlab_release(
 	repo_name = repo_name or os.path.basename(repo_path)
 	for i in range(3):
 		try:
-			project = gitlab.projects.get(f"dokos/{app_map.get(repo_name)}")
+			project = gitlab.projects.get(f"dokos/{app_map.get(repo_name) or repo_name}")
 			project.releases.create(data)
 			break
 		except requests.exceptions.HTTPError:
@@ -411,27 +393,3 @@ def create_gitlab_release(
 				print(release)
 				raise
 	return release
-
-
-def push_branch_for_old_major_version(
-	bench_path, bump_type, app, repo_path, from_branch, to_branch, remote, owner
-):
-	if bump_type != "major":
-		return
-
-	current_version = get_current_version(repo_path, to_branch)
-	old_major_version_branch = f"v{current_version.split('.')[0]}.x.x"
-
-	click.confirm(f"Do you want to push {old_major_version_branch}?", abort=True)
-
-	update_branch(repo_path, to_branch, remote=remote)
-
-	g = git.Repo(repo_path).git
-	g.checkout(b=old_major_version_branch)
-
-	args = [
-		f"{old_major_version_branch}:{old_major_version_branch}",
-	]
-
-	print(f"Pushing {old_major_version_branch} ")
-	print(g.push(remote, *args))
