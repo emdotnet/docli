@@ -7,15 +7,20 @@
   apt: pkg=supervisor state=present force=yes
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: Add additional conf for Supervisor in supervisord.conf
-  blockinfile:
+- name: Change file permissions in supervisord.conf
+  replace:
     path: /etc/supervisor/supervisord.conf
-    marker: "{mark}"
-    marker_begin: "chmod=0700"
-    marker_end: "chmod=0700"
-    block: |
-      chmod=0760
-      chown={{ user }}:{{ user }}
+    regexp: "chmod=0700"
+    replace: "chmod=0760"
+  become: yes
+  become_user: root
+  when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+- name: Change user permissions in supervisord.conf
+  replace:
+    path: /etc/supervisor/supervisord.conf
+    line: "chown={{ user }}:{{ user }}"
+    insertafter: "chmod=0700"
   become: yes
   become_user: root
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
