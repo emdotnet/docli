@@ -542,7 +542,7 @@ def parse_commandline_args():
 		dest="erpnext_repo_url",
 		action="store",
 		default="https://gitlab.com/dokos/dokos",
-		help="Clone dokos from the given url",
+		help="Clone Dokos from the given url",
 	)
 
 	parser.add_argument(
@@ -550,7 +550,23 @@ def parse_commandline_args():
 		dest="erpnext_branch",
 		default="v3.x.x",
 		action="store",
-		help="Clone a particular branch of dokos",
+		help="Clone a particular branch of Dokos",
+	)
+
+	parser.add_argument(
+		"--payments-repo-url",
+		dest="payments_repo_url",
+		action="store",
+		default="https://gitlab.com/dokos/payments",
+		help="Clone Payments from the given url",
+	)
+
+	parser.add_argument(
+		"--payments-branch",
+		dest="payments_branch",
+		default="v3.x.x",
+		action="store",
+		help="Clone a particular branch of Payments",
 	)
 
 	parser.add_argument(
@@ -558,7 +574,7 @@ def parse_commandline_args():
 		dest="without_erpnext",
 		action="store_true",
 		default=False,
-		help="Prevent fetching dokos",
+		help="Prevent fetching Dokos",
 	)
 
 	# direct provision to install versions
