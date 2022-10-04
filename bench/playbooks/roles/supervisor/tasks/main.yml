@@ -6,3 +6,16 @@
 - name: Install supervisor on debian
   apt: pkg=supervisor state=present force=yes
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Add additional conf for Supervisor in supervisord.conf
+  blockinfile:
+    path: /etc/supervisor/supervisord.conf
+    marker: "{mark}"
+    marker_begin: "chmod=0700"
+    marker_end: "chmod=0700"
+    block: |
+      chmod=0760
+      chown={{ user }}:{{ user }}
+  become: yes
+  become_user: root
+  when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'

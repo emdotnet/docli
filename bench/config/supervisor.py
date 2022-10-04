@@ -120,7 +120,7 @@ def check_supervisord_config(user=None):
 			logger.log(action)
 			supervisord_conf_changes += "\n" + action
 
-	if not supervisord_conf_changes:
+	if supervisord_conf_changes:
 		logger.error("supervisord.conf not updated")
 		contents = "\n".join(f"{x}={y}" for x, y in updated_values.items())
 		print(
