@@ -20,8 +20,11 @@
   lineinfile:
     path: /etc/supervisor/supervisord.conf
     line: "chown={{ user }}:{{ user }}"
-    regexp: 'chmod=0760'
     insertafter: "chmod=0760"
+    state: present
   become: yes
   become_user: root
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+- name: Restart supervisor
+  service: name=supervisor state=restarted
