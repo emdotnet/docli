@@ -17,10 +17,11 @@
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
 
 - name: Change user permissions in supervisord.conf
-  replace:
+  lineinfile:
     path: /etc/supervisor/supervisord.conf
     line: "chown={{ user }}:{{ user }}"
-    insertafter: "chmod=0700"
+    regexp: 'chmod=0760'
+    insertafter: "chmod=0760"
   become: yes
   become_user: root
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
