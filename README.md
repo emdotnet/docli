@@ -2,7 +2,7 @@
 
 ## :hammer_and_wrench: How the Docli directory works
 
-Docli is a command line utility from [Frappe Bench](https://github.com/frappe.bench).
+Docli is a command line utility based on [Frappe Bench](https://github.com/frappe.bench).
 
 - Install applications
 - Manage multiple sites and update Dodock / Dokos applications on */nix (CentOS, Debian, Ubuntu, etc) for development and production.
