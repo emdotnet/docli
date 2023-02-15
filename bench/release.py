@@ -12,7 +12,7 @@ from .config.common_site_config import get_config
 import click
 import gitlab
 
-app_map = {"frappe": "dodock", "erpnext": "dokos", "dokos_cloud": "dokos-cloud"}
+app_map = {"frappe": "dodock", "erpnext": "dokos", "dokos_cloud": "dokos-cloud", "dokos_woocommerce": "dokos-woocommerce"}
 
 branches_to_update = {"develop": ["v3.x.x-hotfix"], "hotfix": ["staging", "develop"], "v3.x.x-hotfix": ["develop"]}
 
