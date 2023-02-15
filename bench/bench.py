@@ -357,6 +357,7 @@ class BenchSetup(Base):
 			self.run(f"{venv} env", cwd=self.bench.name)
 
 		self.pip()
+		self.wheel()
 
 		if os.path.exists(frappe):
 			self.run(
@@ -392,6 +393,19 @@ class BenchSetup(Base):
 
 		return self.run(
 			f"{self.bench.python} -m pip install {quiet_flag} --upgrade pip", cwd=self.bench.name
+		)
+
+	@step(title="Installing wheel", success="Installed wheel")
+	def wheel(self, verbose=False):
+		"""Wheel is required for building old setup.py packages.
+		ref: https://github.com/pypa/pip/issues/8559"""
+		import bench.cli
+
+		verbose = bench.cli.verbose or verbose
+		quiet_flag = "" if verbose else "--quiet"
+
+		return self.run(
+			f"{self.bench.python} -m pip install {quiet_flag} wheel", cwd=self.bench.name
 		)
 
 	def logging(self):
