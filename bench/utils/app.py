@@ -13,7 +13,7 @@ from bench.exceptions import (
 	CommandFailedError,
 	VersionNotFound,
 )
-from bench.app import get_repo_dir
+from bench.app import AppMeta, get_repo_dir
 
 
 def is_version_upgrade(app="frappe", bench_path=".", branch=None):
@@ -172,6 +172,28 @@ def get_current_branch(app, bench_path="."):
 
 	repo_dir = get_repo_dir(app, bench_path=bench_path)
 	return get_cmd_output("basename $(git symbolic-ref -q HEAD)", cwd=repo_dir)
+
+
+def fetch_file_from_git(git_url: str, branch: str, file_path: str):
+	from subprocess import Popen, PIPE, DEVNULL
+	from bench.release import releasable_branches
+	cmd = ["git", "archive", "--remote", git_url, branch or releasable_branches[0], file_path]
+	proc = Popen(cmd, stdout=PIPE, stderr=DEVNULL)
+	contents = proc.communicate()[0]
+	return contents.decode("utf-8")
+
+
+@lru_cache(maxsize=5)
+def get_remote_hooks_file_contents(app: AppMeta, deps="hooks.py"):
+	if not app.on_disk:
+		try:
+			from bench.release import reversed_app_map
+			rootdir = reversed_app_map.get(app.repo, app.repo)  # map "dokos" to "erpnext"
+			contents = fetch_file_from_git(app.get_ssh_url(), app.tag or app.branch, f"{rootdir}/{deps}")
+			return contents
+		except Exception:
+			pass
+	return get_required_deps(app.org, app.repo, app.tag or app.branch, deps=deps)
 
 
 @lru_cache(maxsize=5)

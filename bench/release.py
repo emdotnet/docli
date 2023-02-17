@@ -18,6 +18,8 @@ branches_to_update = {"develop": ["v3.x.x-hotfix"], "hotfix": ["staging", "devel
 
 releasable_branches = ["master", "v3.x.x"]
 
+reversed_app_map = {v: k for k, v in app_map.items()}
+
 
 def release(
 	bench_path,
