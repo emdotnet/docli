@@ -460,6 +460,9 @@ class BenchSetup(Base):
 				skip_assets=True, restart_bench=False, ignore_resolution=True
 			)
 
+		if len(apps) == 0:
+			print("Make sure to run `bench setup requirements` from the root directory of the bench.")
+
 	def python(self, apps=None):
 		"""Install and upgrade Python dependencies for specified / all installed apps on given Bench"""
 		import bench.cli
