@@ -262,7 +262,7 @@ class App(AppMeta):
 		self.bench.run(f"{self.bench.python} -m pip uninstall -y {self.name}")
 
 	def _get_dependencies(self):
-		from bench.utils.app import get_required_deps, required_apps_from_hooks
+		from bench.utils.app import required_apps_from_hooks, get_remote_hooks_file_contents
 
 		if self.on_disk:
 			required_deps = os.path.join(self.mount_path, self.repo, "hooks.py")
@@ -271,7 +271,7 @@ class App(AppMeta):
 			except IndexError:
 				return []
 		try:
-			required_deps = get_required_deps(self.org, self.repo, self.tag or self.branch)
+			required_deps = get_remote_hooks_file_contents(self)
 			return required_apps_from_hooks(required_deps)
 		except Exception:
 			return []
