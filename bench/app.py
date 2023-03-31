@@ -201,7 +201,9 @@ class App(AppMeta):
 
 	@step(title="Archiving App {repo}", success="App {repo} Archived")
 	def remove(self, no_backup: bool = False):
-		active_app_path = os.path.join("apps", self.repo)
+		from bench.release import reversed_app_map
+		dir_name = reversed_app_map.get(self.repo, self.repo)
+		active_app_path = os.path.join("apps", dir_name)
 
 		if no_backup:
 			if not os.path.islink(active_app_path):
@@ -212,7 +214,7 @@ class App(AppMeta):
 		else:
 			archived_path = os.path.join("archived", "apps")
 			archived_name = get_available_folder_name(
-				f"{self.repo}-{date.today()}", archived_path
+				f"{dir_name}-{date.today()}", archived_path
 			)
 			archived_app_path = os.path.join(archived_path, archived_name)
 
