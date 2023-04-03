@@ -43,7 +43,7 @@
     become_user: root
     command: chown {{ frappe_user }} -R {{ user_directory }}
 
-  - name:  python3 bench init
+  - name:  python3.10 bench init
     command: bench init {{ bench_path }} --frappe-path {{ frappe_repo_url }} --frappe-branch {{ frappe_branch }} --python {{ python }}
     args:
       creates: "{{ bench_path }}"

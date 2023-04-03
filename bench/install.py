@@ -161,7 +161,7 @@ def install_prerequisites():
 		{
 			"apt-get": [
 				"sudo apt-get update",
-				"sudo apt-get install -y git build-essential python3-setuptools python3-dev libffi-dev",
+				"sudo apt-get install -y git build-essential python3.10 python3.10-dev python3.10-distutils libffi-dev",
 			],
 			"yum": [
 				'sudo yum groupinstall -y "Development tools"',
@@ -188,8 +188,8 @@ def install_prerequisites():
 	success = run_os_command(
 		{
 			"python3": [
-				"sudo -H python3 -m pip install --upgrade pip",
-				"sudo -H python3 -m pip install --upgrade setuptools cryptography ansible~=2.8.15",
+				"sudo -H python3.10 -m pip install --upgrade pip",
+				"sudo -H python3.10 -m pip install --upgrade setuptools cryptography ansible~=2.10",
 			]
 		}
 	)
