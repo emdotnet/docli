@@ -11,6 +11,8 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+    extra_hosts:
+      localhost: 172.17.0.1
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
