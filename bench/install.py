@@ -570,6 +570,22 @@ def parse_commandline_args():
 	)
 
 	parser.add_argument(
+		"--hrms-repo-url",
+		dest="hrms_repo_url",
+		action="store",
+		default="https://gitlab.com/dokos/hrms",
+		help="Clone HRMS from the given url",
+	)
+
+	parser.add_argument(
+		"--hrms-branch",
+		dest="hrms_branch",
+		default="v3.x.x",
+		action="store",
+		help="Clone a particular branch of HRMS",
+	)
+
+	parser.add_argument(
 		"--without-dokos",
 		dest="without_erpnext",
 		action="store_true",

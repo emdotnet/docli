@@ -17,6 +17,13 @@
       chdir: "{{ bench_path }}"
     when: not app.stat.exists or not without_erpnext
 
+  - name: Get HRMS
+    command: bench get-app hrms {{ hrms_repo_url }} --branch {{ hrms_branch }}
+    args:
+      creates: "{{ bench_path }}/apps/hrms"
+      chdir: "{{ bench_path }}"
+    when: not app.stat.exists or not without_erpnext
+
   - name: Check whether the site already exists
     stat: path="{{ bench_path }}/sites/{{ site }}"
     register: site_folder
