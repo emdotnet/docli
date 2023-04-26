@@ -5,26 +5,35 @@ name: dodock
 x-image: &image
   image: registry.gitlab.com/dokos/dodock
 
+x-depends-on-configurator: &depends_on_configurator
+  depends_on:
+    configurator:
+      condition: service_completed_successfully
+
+x-restart-on-failure: &restart_on_failure
+  deploy:
+    restart_policy:
+      condition: on-failure
+
+x-backend-defaults: &backend_defaults
+  <<: [*depends_on_configurator, *restart_on_failure, *image]
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+
 services:
   backend:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
+    <<: *backend_defaults
     extra_hosts:
       localhost: 172.17.0.1
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
 
   configurator:
-    <<: *image
+    <<: *backend_defaults
+    depends_on: {}
     deploy:
       restart_policy:
         condition: none
-    entrypoint:
-      - bash
-      - -c
+    entrypoint: bash -c
     command:
       - >
         ls -1 apps > sites/apps.txt;
@@ -46,16 +55,14 @@ services:
       - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    <<: *image
+    <<: *backend_defaults
     deploy:
       restart_policy:
         condition: none
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
-    entrypoint:
-      - bash
-      - -c
+    entrypoint: bash -c
     command:
       - >
         wait-for-it -t 120 db:3306;
@@ -76,16 +83,15 @@ services:
         done;
         echo "sites/common_site_config.json found";
         bench new-site frontend --no-mariadb-socket --admin-password=admin --db-root-password=admin --set-default;
+        echo; echo; echo; echo; echo "Site creation completed successfully"; echo;
 
   db:
+    <<: *restart_on_failure
     image: mariadb:10.6
     healthcheck:
       test: mysqladmin ping -h localhost --password=admin
       interval: 1s
       retries: 15
-    deploy:
-      restart_policy:
-        condition: on-failure
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -97,12 +103,8 @@ services:
       - db-data:/var/lib/mysql
 
   frontend:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - nginx-entrypoint.sh
+    <<: *backend_defaults
+    command: nginx-entrypoint.sh
     environment:
       BACKEND: backend:8000
       FRAPPE_SITE_NAME_HEADER: frontend
@@ -112,101 +114,46 @@ services:
       UPSTREAM_REAL_IP_RECURSIVE: "off"
       PROXY_READ_TIMOUT: 120
       CLIENT_MAX_BODY_SIZE: 50m
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
     ports:
       - "8080:8080"
 
   queue-default:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - bench
-      - worker
-      - --queue
-      - default
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+    <<: *backend_defaults
+    command: bench worker --queue default
 
   queue-long:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - bench
-      - worker
-      - --queue
-      - long
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+    <<: *backend_defaults
+    command: bench worker --queue long
 
   queue-short:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - bench
-      - worker
-      - --queue
-      - short
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+    <<: *backend_defaults
+    command: bench worker --queue short
 
   redis-queue:
+    <<: *restart_on_failure
     image: redis:6.2-alpine
-    deploy:
-      restart_policy:
-        condition: on-failure
     volumes:
       - redis-queue-data:/data
 
   redis-cache:
+    <<: *restart_on_failure
     image: redis:6.2-alpine
-    deploy:
-      restart_policy:
-        condition: on-failure
     volumes:
       - redis-cache-data:/data
 
   redis-socketio:
+    <<: *restart_on_failure
     image: redis:6.2-alpine
-    deploy:
-      restart_policy:
-        condition: on-failure
     volumes:
       - redis-socketio-data:/data
 
   scheduler:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - bench
-      - schedule
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+    <<: *backend_defaults
+    command: bench schedule
 
   websocket:
-    <<: *image
-    deploy:
-      restart_policy:
-        condition: on-failure
-    command:
-      - node
-      - /home/frappe/frappe-bench/apps/frappe/socketio.js
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+    <<: *backend_defaults
+    command: node /home/frappe/frappe-bench/apps/frappe/socketio.js
 
 volumes:
   db-data:
