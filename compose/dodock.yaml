@@ -5,9 +5,11 @@ name: dodock
 x-image: &image
   image: registry.gitlab.com/dokos/dodock
 
-x-depends-on-configurator: &depends_on_configurator
+x-depends-on-ready: &depends_on_site_ready
   depends_on:
     configurator:
+      condition: service_completed_successfully
+    create-site:
       condition: service_completed_successfully
 
 x-restart-on-failure: &restart_on_failure
@@ -16,7 +18,7 @@ x-restart-on-failure: &restart_on_failure
       condition: on-failure
 
 x-backend-defaults: &backend_defaults
-  <<: [*depends_on_configurator, *restart_on_failure, *image]
+  <<: [*depends_on_site_ready, *restart_on_failure, *image]
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - logs:/home/frappe/frappe-bench/logs
@@ -33,7 +35,7 @@ services:
     deploy:
       restart_policy:
         condition: none
-    entrypoint: bash -c
+    entrypoint: bash -cx
     command:
       - >
         ls -1 apps > sites/apps.txt;
@@ -50,12 +52,20 @@ services:
       REDIS_QUEUE: redis-queue:6379
       REDIS_SOCKETIO: redis-socketio:6379
       SOCKETIO_PORT: "9000"
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    <<: *backend_defaults
+    <<: *image
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+      redis-socketio:
+        condition: service_started
     deploy:
       restart_policy:
         condition: none
@@ -82,8 +92,8 @@ services:
           fi
         done;
         echo "sites/common_site_config.json found";
-        bench new-site frontend --no-mariadb-socket --admin-password=admin --db-root-password=admin --set-default;
-        echo; echo; echo; echo; echo "Site creation completed successfully"; echo;
+        bench new-site frontend --no-mariadb-socket --admin-password=admin --db-root-password=admin --set-default || exit 0;
+        echo; echo "Site creation completed successfully"; echo;
 
   db:
     <<: *restart_on_failure
