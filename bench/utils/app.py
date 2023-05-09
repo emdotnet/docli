@@ -223,6 +223,9 @@ def required_apps_from_hooks(required_deps, local=False):
 		required_deps = pathlib.Path(required_deps).read_text()
 
 	_req_apps_tag = required_apps_re.search(required_deps)
+	if not _req_apps_tag:
+		return []
+
 	req_apps_tag = _req_apps_tag[1]
 	return ast.literal_eval(req_apps_tag)
 

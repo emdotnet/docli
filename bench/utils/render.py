@@ -55,7 +55,11 @@ class Rendering:
 
 		_prefix = click.style("⏼", fg="bright_yellow")
 		_hierarchy = "  " if not self.is_parent else ""
-		self._title = self.title.format(**self.kw)
+		try:
+			self._title = self.title.format(**self.kw)
+		except KeyError:
+			from collections import defaultdict
+			self._title = self.title.format_map(defaultdict(lambda: "{?}", **self.kw))
 		click.secho(f"{_hierarchy}{_prefix} {self._title}")
 
 		bench.LOG_BUFFER.append(
