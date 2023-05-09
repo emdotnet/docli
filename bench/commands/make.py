@@ -37,7 +37,12 @@ import click
 	help="Skip redis config generation if already specifying the common-site-config file",
 )
 @click.option("--skip-assets", is_flag=True, default=False, help="Do not build assets")
-@click.option("--install-app", help="Install particular app after initialization")
+@click.option(
+	"--install-app",
+	help="Install app(s) after initialization",
+	multiple=True,
+	default=None,
+)
 @click.option("--verbose", is_flag=True, help="Verbose output during install")
 def init(
 	path,

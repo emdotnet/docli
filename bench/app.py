@@ -254,7 +254,8 @@ class App(AppMeta):
 
 	@step(title="Cloning and installing {repo}", success="App {repo} Installed")
 	def install_resolved_apps(self, *args, **kwargs):
-		self.get()
+		if not os.path.isdir(self.mount_path):
+			self.get()
 		self.install(*args, **kwargs, resolved=True)
 
 	@step(title="Uninstalling App {repo}", success="App {repo} Uninstalled")
@@ -297,7 +298,8 @@ def make_resolution_plan(app: App, bench: "Bench"):
 
 	for app_name in app._get_dependencies():
 		dep_app = App(app_name, bench=bench)
-		is_valid_frappe_branch(dep_app.url, dep_app.branch)
+		if any(x in dep_app.url for x in ("http://", "https://", "ssh://")):
+			is_valid_frappe_branch(dep_app.url, dep_app.branch)
 		dep_app.required_by = app.name
 		if dep_app.repo in resolution:
 			click.secho(f"{dep_app.repo} is already resolved skipping", fg="yellow")
@@ -507,13 +509,15 @@ def install_resolved_deps(
 				fg="green" if is_compatible else "red",
 			)
 			app.update_app_state()
-			if click.confirm(
-				f"Do you wish to clone and install the already installed {prefix}ompatible app"
-			):
-				click.secho(f"Removing installed app {app.name}", fg="yellow")
-				shutil.rmtree(path_to_app)
-			else:
-				continue
+
+			if not is_compatible:
+				if click.confirm(
+					f"Do you wish to clone and install the already installed {prefix}ompatible app"
+				):
+					click.secho(f"Removing installed app {app.name}", fg="yellow")
+					shutil.rmtree(path_to_app)
+				else:
+					continue
 		app.install_resolved_apps(skip_assets=skip_assets, verbose=verbose)
 
 
