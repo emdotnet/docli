@@ -77,6 +77,14 @@ class AppMeta:
 		self.mount_path = os.path.abspath(
 			os.path.join(urlparse(self.name).netloc, urlparse(self.name).path)
 		)
+		print(".")
+		print(".")
+		print("self.name", self.name)
+		print("urlparse(self.name).netloc", urlparse(self.name).netloc)
+		print("urlparse(self.name).path", urlparse(self.name).path)
+		print(self.mount_path)
+		print(".")
+		print(".")
 		self.setup_details()
 
 	def setup_details(self):
@@ -85,8 +93,13 @@ class AppMeta:
 			self.repo = self.app_name = self.name
 			return
 		# fetch meta from installed apps
-		if self.bench and os.path.exists(os.path.join(self.bench.name, "apps", self.name)):
-			self.mount_path = os.path.join(self.bench.name, "apps", self.name)
+		if self.bench and os.path.exists(os.path.join(self.bench.cwd, "apps", self.name)):
+			self.mount_path = os.path.join(self.bench.cwd, "apps", self.name)
+			print(".")
+			print(".")
+			print(self.mount_path)
+			print(".")
+			print(".")
 			self.from_apps = True
 			self._setup_details_from_mounted_disk()
 
