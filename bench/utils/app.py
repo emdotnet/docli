@@ -174,25 +174,16 @@ def get_current_branch(app, bench_path="."):
 	return get_cmd_output("basename $(git symbolic-ref -q HEAD)", cwd=repo_dir)
 
 
-def fetch_file_from_git(git_url: str, branch: str, file_path: str):
-	from subprocess import Popen, PIPE, DEVNULL
-	from bench.release import releasable_branches
-	cmd = ["git", "archive", "--remote", git_url, branch or releasable_branches[0], file_path]
-	proc = Popen(cmd, stdout=PIPE, stderr=DEVNULL)
-	contents = proc.communicate()[0]
-	return contents.decode("utf-8")
-
-
 @lru_cache(maxsize=5)
 def get_remote_hooks_file_contents(app: AppMeta, deps="hooks.py"):
-	if not app.on_disk:
-		try:
-			from bench.release import reversed_app_map
-			rootdir = reversed_app_map.get(app.repo, app.repo)  # map "dokos" to "erpnext"
-			contents = fetch_file_from_git(app.get_ssh_url(), app.tag or app.branch, f"{rootdir}/{deps}")
-			return contents
-		except Exception:
-			pass
+	if "gitlab" in app.remote_server:
+		from bench.release import reversed_app_map
+		import requests
+
+		rootdir = reversed_app_map.get(app.repo, app.repo)  # map "dokos" to "erpnext"
+		raw_url = f"https://{app.remote_server}/{app.org}/{app.repo}/-/raw/{app.tag or app.branch}/{rootdir}/{deps}"
+		return requests.get(raw_url).text
+
 	return get_required_deps(app.org, app.repo, app.tag or app.branch, deps=deps)
 
 
