@@ -91,14 +91,15 @@ def init(
 
 	# getting app on bench init using --install-app
 	if install_app:
-		get_app(
-			install_app,
-			branch=frappe_branch,
-			bench_path=path,
-			skip_assets=True,
-			verbose=verbose,
-			resolve_deps=False,
-		)
+		for app in install_app:
+			get_app(
+				app,
+				branch=frappe_branch,
+				bench_path=path,
+				skip_assets=True,
+				verbose=verbose,
+				resolve_deps=True,
+			)
 
 	if not skip_assets:
 		build_assets(bench_path=path)
