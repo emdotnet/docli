@@ -88,6 +88,7 @@ class AppMeta:
 		self.setup_details()
 
 	def setup_details(self):
+		print("setup_details", self.__dict__)
 		# support for --no-git
 		if not self.is_repo:
 			self.repo = self.app_name = self.name
