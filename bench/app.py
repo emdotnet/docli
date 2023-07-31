@@ -174,6 +174,10 @@ class AppMeta:
 	def get_ssh_url(self):
 		return f"git@{self.remote_server}:{self.org}/{self.repo}.git"
 
+	@property
+	def path_to_app_dir(self):
+		return os.path.join(self.bench.cwd, "apps", self.app_name)
+
 
 @lru_cache(maxsize=None)
 class App(AppMeta):
@@ -270,7 +274,7 @@ class App(AppMeta):
 
 	@step(title="Cloning and installing {repo}", success="App {repo} Installed")
 	def install_resolved_apps(self, *args, **kwargs):
-		if not os.path.isdir(self.mount_path):
+		if not os.path.isdir(self.path_to_app_dir):
 			self.get()
 		self.install(*args, **kwargs, resolved=True)
 
@@ -282,7 +286,7 @@ class App(AppMeta):
 		from bench.utils.app import required_apps_from_hooks, get_remote_hooks_file_contents
 
 		if self.on_disk:
-			required_deps = os.path.join(self.mount_path, self.repo, "hooks.py")
+			required_deps = os.path.join(self.path_to_app_dir, self.repo, "hooks.py")
 			try:
 				return required_apps_from_hooks(required_deps, local=True)
 			except IndexError:
